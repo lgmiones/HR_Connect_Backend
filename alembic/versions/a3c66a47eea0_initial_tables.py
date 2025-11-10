@@ -1,8 +1,8 @@
 """initial tables
 
-Revision ID: 87bc9c7caa16
+Revision ID: a3c66a47eea0
 Revises: 
-Create Date: 2025-11-10 09:04:20.761049
+Create Date: 2025-11-10 11:10:26.289973
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '87bc9c7caa16'
+revision: str = 'a3c66a47eea0'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,6 +25,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=100), nullable=True),
     sa.Column('hashed_password', sa.String(length=255), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.PrimaryKeyConstraint('user_id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
@@ -32,8 +33,8 @@ def upgrade() -> None:
     op.create_table('leave_balance',
     sa.Column('leave_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('total_leaves', sa.String(length=100), nullable=True),
-    sa.Column('used_leaves', sa.String(length=255), nullable=True),
+    sa.Column('total_leaves', sa.Integer(), nullable=True),
+    sa.Column('used_leaves', sa.String(), nullable=True),
     sa.Column('last_updated', sa.Date(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('leave_id')

@@ -7,6 +7,6 @@ class LeaveBalance(Base):
 
     leave_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"), index=True)
-    total_leaves = Column(String(100))
-    used_leaves = Column(String(255))
+    total_leaves = Column(Integer)
+    used_leaves = Column(String)
     last_updated = Column(Date, default=func.current_date(), onupdate=func.current_date())
