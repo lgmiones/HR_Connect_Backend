@@ -7,8 +7,8 @@ from alembic import context
 
 # Import your settings and models
 from app.core.config import settings
-from app.models.user import Base  # Import Base from your user model
-
+from app.models.user import Base  
+from app.models.leave_balance import Base  
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
