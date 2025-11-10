@@ -1,0 +1,29 @@
+
+    HR FREQUENTLY ASKED QUESTIONS
+    
+    Q: How do I check my remaining leave balance?
+    A: Log in to HRConnect and ask the chatbot "What is my leave balance?" or 
+    navigate to the Leave Management dashboard.
+    
+    Q: Can I file leave on weekends?
+    A: No, leave can only be filed for regular working days.
+    
+    Q: What happens if I get sick during my leave?
+    A: File a sick leave and provide a medical certificate. Your annual leave
+    will be converted to sick leave.
+    
+    Q: How do I cancel my leave request?
+    A: Contact your supervisor and HR immediately. Cancellation is subject to
+    approval and timing.
+    
+    Q: Can I use my leave credits before they are earned?
+    A: No, leave credits must be earned before they can be used.
+    
+    Q: What is the difference between annual and sick leave?
+    A: Annual leave is for planned time off. Sick leave requires medical
+    documentation and is for health-related absences.
+    
+    Q: How do I file an emergency leave?
+    A: Notify your supervisor immediately and file through HRConnect as soon
+    as possible with supporting documents.
+    

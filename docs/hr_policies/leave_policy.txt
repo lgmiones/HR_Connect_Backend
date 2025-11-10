@@ -1,0 +1,34 @@
+
+    LEAVE POLICY
+    
+    Annual Leave Entitlement:
+    All employees are entitled to 15 days of annual leave per year. Leave credits are
+    earned monthly and can be used after probation period.
+    
+    Types of Leave:
+    1. Annual Leave - 15 days per year
+    2. Sick Leave - 10 days per year
+    3. Emergency Leave - 5 days per year
+    4. Maternity Leave - 60 days (for female employees)
+    5. Paternity Leave - 7 days (for male employees)
+    
+    Leave Application Process:
+    1. Log in to HRConnect system
+    2. Navigate to Leave Management
+    3. Click "File Leave Request"
+    4. Select leave type and dates
+    5. Provide reason for leave
+    6. Submit for approval
+    
+    Leave Approval:
+    - Leave requests must be submitted at least 3 days in advance
+    - Immediate supervisor approval required
+    - HR will verify leave credits
+    - Approved leave will reflect in your leave balance
+    
+    Unused Leave:
+    - Unused annual leave can be carried over up to 5 days
+    - Unused leave may be converted to cash at year-end (subject to policy)
+    
+    Contact HR for questions: hr@company.com
+    
