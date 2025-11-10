@@ -7,12 +7,12 @@ from datetime import timedelta
 from typing import Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from app.core.config import settings
 
 from app.core.auth_utils import (
     verify_password,
     get_password_hash,
-    create_access_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    create_access_token
 )
 from app.repositories.user_repository import UserRepository
 from app.models.user import User
@@ -65,7 +65,7 @@ class AuthService:
             )
         
         # Create access token
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"user_id": user.user_id, "email": user.email},
             expires_delta=access_token_expires
