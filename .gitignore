@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Environment
+.env
+.env.*
+
+# Alembic migrations (optional, or only ignore temp files)
+HR_Connect_Backend/alembic/__pycache__/
+HR_Connect_Backend/alembic/versions/*.pyc
