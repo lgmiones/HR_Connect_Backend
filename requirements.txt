@@ -1,0 +1,41 @@
+# Core FastAPI stack
+fastapi
+uvicorn[standard]
+starlette
+
+# Database
+SQLAlchemy
+pyodbc
+alembic
+greenlet
+
+# Security & Auth
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.5.0
+bcrypt==4.0.1
+cryptography==46.0.3
+
+# Forms & file uploads
+python-multipart
+
+# Validation / Settings
+pydantic
+pydantic-settings
+email-validator
+
+# Environment & Config
+python-dotenv
+PyYAML
+
+# Vector DB
+chromadb
+
+# Optional dependencies for async / networking
+anyio
+h11
+httptools
+sniffio
+websockets
+watchfiles
+typing-inspection
+typing_extensions
