@@ -1,13 +1,23 @@
+"""
+HRConnect API - Main Application
+"""
+
 from fastapi import FastAPI
-from app.api.router import api_router
-from app.db.session import Base, engine
+from app.api.routes import auth
 
-# Create tables if not exist
-Base.metadata.create_all(bind=engine)
+app = FastAPI(
+    title="HRConnect API",
+    description="Human Resource Information System",
+    version="1.0.0"
+)
 
-app = FastAPI(title="HR Connect Backend")
-app.include_router(api_router)
+# Include authentication routes
+app.include_router(auth.router)
+
 
 @app.get("/")
 def root():
-    return {"message": "HR Connect API is running"}
+    return {
+        "message": "HRConnect API is running",
+        "docs": "/docs"
+    }
