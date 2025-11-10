@@ -7,6 +7,7 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import settings
+from app.core.token_blacklist import is_token_revoked
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -37,7 +38,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 def verify_token(token: str) -> dict:
-    """Verify JWT token"""
+    """Verify JWT token and check if it is revoked"""
+    if is_token_revoked(token):
+        return None
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
