@@ -4,6 +4,8 @@ HRConnect API - Main Application
 
 from fastapi import FastAPI
 from app.api.routes import auth
+from pydantic import BaseModel
+from app.retriever import query_hr_documents
 
 app = FastAPI(
     title="HRConnect API",
@@ -14,6 +16,20 @@ app = FastAPI(
 # Include authentication routes
 app.include_router(auth.router)
 
+class ChatRequest(BaseModel):
+    question: str
+
+@app.post("/chatbot")
+async def chatbot_query(request: ChatRequest):
+    """
+    Example:
+    POST /chatbot
+    {
+        "question": "What is the leave policy?"
+    }
+    """
+    response = query_hr_documents(request.question)
+    return response    
 
 @app.get("/")
 def root():

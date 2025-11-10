@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     AZURE_OPENAI_ENDPOINT: str | None = None
     AZURE_OPENAI_DEPLOYMENT: str | None = None
 
+    GROQ_API_KEY: str
+
     class Config:
         env_file = ".env"  # loads variables from your .env file
 
