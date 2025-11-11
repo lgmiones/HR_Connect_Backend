@@ -13,6 +13,8 @@ __pycache__/
 HR_Connect_Backend/alembic/__pycache__/
 HR_Connect_Backend/alembic/versions/*.pyc
 
+# ChromaDB persistent vector store
+chroma_db/
 # Chroma DB (Vector Database) - ADD THIS
 chroma_db/
 *.chroma
