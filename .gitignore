@@ -12,3 +12,31 @@ __pycache__/
 # Alembic migrations (optional, or only ignore temp files)
 HR_Connect_Backend/alembic/__pycache__/
 HR_Connect_Backend/alembic/versions/*.pyc
+
+# Chroma DB (Vector Database) - ADD THIS
+chroma_db/
+*.chroma
+
+# HR Documents (may contain sensitive data) - ADD THIS
+data/hr_docs/*.pdf
+data/hr_docs/*.docx
+data/hr_docs/*.txt
+!data/hr_docs/.gitkeep
+
+# Virtual Environment - ADD THIS
+venv/
+.venv/
+env/
+ENV/
+
+# IDE - ADD THIS
+.vscode/
+.idea/
+*.swp
+
+# OS - ADD THIS
+.DS_Store
+Thumbs.db
+
+# Logs - ADD THIS
+*.log
