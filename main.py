@@ -5,7 +5,7 @@ HRConnect API - Main Application
 from fastapi import FastAPI
 from app.api.routes import auth
 from pydantic import BaseModel
-from app.retriever import query_hr_documents
+from app.services.retriever import query_hr_documents
 
 app = FastAPI(
     title="HRConnect API",
