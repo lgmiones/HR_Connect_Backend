@@ -59,7 +59,7 @@ app = FastAPI(
     }
 )
 
-# Include authentication routes
+# routes
 app.include_router(auth.router)
 
 class ChatRequest(BaseModel):
