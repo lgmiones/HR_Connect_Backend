@@ -1,10 +1,10 @@
+# retriever.py
+
 import os
 from langchain_chroma import Chroma
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_groq import ChatGroq  
-from langchain_core.vectorstores.base import VectorStoreRetriever
-from langchain_core.documents import Document
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -51,4 +51,5 @@ def query_hr_documents(question: str):
     chain = prompt | llm | StrOutputParser()
     answer = chain.invoke({"context": context, "question": question})
 
-    return {"answer": answer, "sources": [d.metadata for d in docs]}
+    # return {"answer": answer, "sources": [d.metadata for d in docs]}
+    return {"answer": answer}

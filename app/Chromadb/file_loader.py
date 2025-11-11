@@ -1,7 +1,6 @@
 # file_loader.py
 import os
 import docx2txt
-import PyPDF2
 from PyPDF2 import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
