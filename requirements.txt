@@ -1,15 +1,4 @@
 # Core FastAPI stack
-<<<<<<< HEAD
-fastapi
-uvicorn[standard]
-starlette
-
-# Database
-SQLAlchemy
-pyodbc
-alembic
-greenlet
-=======
 fastapi==0.121.1
 uvicorn[standard]==0.38.0
 starlette==0.49.3
@@ -19,7 +8,6 @@ SQLAlchemy==2.0.44
 pyodbc==5.3.0
 alembic==1.17.1
 greenlet==3.2.4
->>>>>>> 3d0beaa65e88395caae9eca0313a660af4901582
 
 # Security & Auth
 passlib[bcrypt]==1.7.4
@@ -28,31 +16,6 @@ bcrypt==4.0.1
 cryptography==46.0.3
 
 # Forms & file uploads
-<<<<<<< HEAD
-python-multipart
-
-# Validation / Settings
-pydantic
-pydantic-settings
-email-validator
-
-# Environment & Config
-python-dotenv
-PyYAML
-
-# Vector DB
-chromadb
-
-# Optional dependencies for async / networking
-anyio
-h11
-httptools
-sniffio
-websockets
-watchfiles
-typing-inspection
-typing_extensions
-=======
 python-multipart==0.0.20
 
 # Validation / Settings
@@ -76,4 +39,3 @@ websockets==15.0.1
 watchfiles==1.1.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
->>>>>>> 3d0beaa65e88395caae9eca0313a660af4901582

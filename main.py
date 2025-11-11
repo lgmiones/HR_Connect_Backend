@@ -56,7 +56,7 @@ app = FastAPI(
     }
 )
 
-# Include authentication routes
+# routes
 app.include_router(auth.router)
 app.include_router(chatbot.router)
 

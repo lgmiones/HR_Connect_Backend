@@ -1,6 +1,3 @@
-"""
-Authentication Routes with Repository Pattern
-"""
 
 from fastapi import APIRouter, Depends, status, Header, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
