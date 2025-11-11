@@ -1,7 +1,4 @@
-"""
-Authentication Routes with Repository Pattern
-"""
-
+#auth.py
 from fastapi import APIRouter, Depends, status, Header, HTTPException
 from sqlalchemy.orm import Session
 
