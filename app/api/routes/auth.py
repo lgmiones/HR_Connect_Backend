@@ -3,13 +3,14 @@ Authentication Routes with Repository Pattern
 """
 
 from fastapi import APIRouter, Depends, status, Header, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth_schemas import UserRegister, UserLogin, Token, UserResponse
 from app.services.auth_service import AuthService
-from app.api.dependencies import get_current_user
+from app.api.dependencies import get_current_user, security
 from app.core.token_blacklist import add_to_blacklist
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -59,14 +60,15 @@ def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
-def logout(authorization: str = Header(...)):
+def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(security)  
+):
     """
     Logout the current user by revoking their token
-    """
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
-    token = authorization.split(" ")[1]
+    Requires valid JWT token in Authorization header
+    """
+    token = credentials.credentials  # Extract the actual token
     add_to_blacklist(token)
     
     return {"message": "Successfully logged out"}
