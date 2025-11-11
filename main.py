@@ -53,7 +53,10 @@ from app.models.user import User
 app = FastAPI(
     title="HRConnect API",
     description="Human Resource Information System",
-    version="1.0.0"
+    version="1.0.0",
+    swagger_ui_parameters={
+        "persistAuthorization": True  # Keep authorization after page refresh
+    }
 )
 
 # Include authentication routes
