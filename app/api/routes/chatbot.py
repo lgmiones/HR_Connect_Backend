@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.models.user import User
 from app.api.dependencies import get_current_user
 from app.services.retriever import query_hr_documents
-from app.Agent.agentic_chatbot import hr_agent_graph, AgentState
+from app.Agent import hr_agent_graph, AgentState
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ class ChatResponse(BaseModel):
     answer: str
     query_type: str | None = None
     source: str | None = None
+    is_compound: bool = False
+    num_questions: int = 1
 
 
 @router.post("/query", response_model=ChatResponse)
@@ -59,30 +61,39 @@ async def chat_query(
     try:
         user_id = current_user.user_id
         
-        # Prepare initial state for LangGraph agent
         initial_state = AgentState(
             messages=[{"role": "user", "content": request.question}],
             user_id=user_id
         )
         
-        # Invoke the LangGraph orchestrator
         logger.info(f"User {current_user.email} (ID: {user_id}) asked: {request.question}")
         result = hr_agent_graph.invoke(initial_state)
         
-        # Extract the final response
         final_message = result["messages"][-1]
         answer = final_message["content"] if isinstance(final_message, dict) else final_message.content
         
-        # Determine source for response
-        query_type = result.get("query_type")
-        source = "policy_documents" if query_type == "policy" else "personal_database" if query_type == "personal_data" else "general_knowledge"
+        # Better metadata handling for compound queries
+        is_multiple = result.get("is_multiple", False)
+        sub_queries = result.get("sub_queries", [])
+        
+        if is_multiple and sub_queries:
+            # Compound query - determine dominant type
+            query_types = [sq.query_type for sq in sub_queries]
+            query_type = "compound"
+            source = f"multiple_sources ({len(query_types)} questions)"
+        else:
+            # Single query
+            query_type = result.get("query_type", "general")
+            source = "policy_documents" if query_type == "policy" else "personal_database" if query_type == "personal_data" else "general_knowledge"
         
         logger.info(f"Query resolved as type: {query_type}, source: {source}")
         
         return ChatResponse(
             answer=answer,
             query_type=query_type,
-            source=source
+            source=source,
+            is_compound=is_multiple,
+            num_questions=len(sub_queries) if sub_queries else 1
         )
         
     except Exception as e:
