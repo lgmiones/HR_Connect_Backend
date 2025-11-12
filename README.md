@@ -12,11 +12,11 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 ## 📋 Table of Contents
 
 - [Features](#-features)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
+- [Architecture](#️-architecture)
+- [Tech Stack](#️-tech-stack)
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
-- [Configuration](#-configuration)
+- [Configuration](#️-configuration)
 - [Running the Application](#-running-the-application)
 - [API Documentation](#-api-documentation)
 - [Project Structure](#-project-structure)
