@@ -9,21 +9,21 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
-- [Features](#-features)
-- [Architecture](#️-architecture)
-- [Tech Stack](#️-tech-stack)
-- [Prerequisites](#-prerequisites)
-- [Installation](#-installation)
-- [Configuration](#️-configuration)
-- [Running the Application](#-running-the-application)
-- [API Documentation](#-api-documentation)
-- [Project Structure](#-project-structure)
-- [Usage Examples](#-usage-examples)
-- [Development](#-development)
-- [Team](#-team)
-- [License](#-license)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [API Documentation](#api-documentation)
+- [Project Structure](#project-structure)
+- [Usage Examples](#usage-examples)
+- [Development](#development)
+- [Team](#team)
+- [License](#license)
 
 ---
 
@@ -381,8 +381,9 @@ HR_Connect_Backend/
 │   │   └── session.py             # Database connection
 │   │
 │   ├── models/
-│   │   └── user.py                # SQLAlchemy models
-│   │
+│   │   └── user.py                # SQLAlchemy model
+│   │   ├── leave_balance.py       # SQLAlchemy model
+|   |
 │   ├── repositories/
 │   │   ├── base_repository.py     # Generic CRUD
 │   │   └── user_repository.py     # User data access
@@ -463,7 +464,7 @@ HR_Connect_Backend/
 
 ---
 
-## 🔧 Development
+##  Development
 
 ### Running Tests
 ```bash
