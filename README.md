@@ -64,8 +64,8 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 └────────────────────┬────────────────────────────────────┘
                      ↓
 ┌────────────────────────────────────────────────────────┐
-│              FastAPI Chatbot Endpoint                   │
-│              (Authentication Required)                  │
+│              FastAPI Chatbot Endpoint                  │
+│              (Authentication Required)                 │
 └────────────────────┬───────────────────────────────────┘
                      ↓
 ┌────────────────────────────────────────────────────────┐
