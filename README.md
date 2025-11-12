@@ -224,7 +224,7 @@ python -m app.Chromadb.embed_documents
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Database Schema
 
@@ -522,7 +522,7 @@ python -m app.Chromadb.embed_documents
 
 ---
 
-## 🎯 Key Features Demonstrated
+## Key Features Demonstrated
 
 ### SOLID Principles
 - **Single Responsibility**: Each handler does one thing
@@ -554,7 +554,7 @@ python -m app.Chromadb.embed_documents
 
 ---
 
-## 📝 License
+## License
 
 This project is developed as a capstone project for educational purposes.
 
