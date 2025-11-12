@@ -5,7 +5,7 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green)
 ![LangChain](https://img.shields.io/badge/LangChain-0.1-orange)
-![Azure OpenAI](https://img.shields.io/badge/Azure%20OpenAI-GPT--4o--mini-purple)
+![Azure OpenAI](https://img.shields.io/badge/Azure%20OpenAI-GPT--5--mini-purple)
 
 ---
 
