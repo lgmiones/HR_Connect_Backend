@@ -39,3 +39,14 @@ websockets==15.0.1
 watchfiles==1.1.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
+
+
+# Add this line
+langchain-openai>=0.0.5
+
+# Or install directly
+pip install langchain-openai --break-system-packages
+
+# Document processing
+docx2txt        # ← ADD THIS
+PyPDF2          # ← ADD THIS

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.models.user import User
 from app.api.dependencies import get_current_user
 from app.services.retriever import query_hr_documents
-from app.Agent.agentic_chatbot import hr_agent_graph, AgentState
+from app.Agent import hr_agent_graph, AgentState
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ class ChatResponse(BaseModel):
     answer: str
     query_type: str | None = None
     source: str | None = None
+    is_compound: bool = False
+    num_questions: int = 1
 
 
 @router.post("/query", response_model=ChatResponse)
@@ -59,43 +61,57 @@ async def chat_query(
     try:
         user_id = current_user.user_id
         
-        # Prepare initial state for LangGraph agent
         initial_state = AgentState(
             messages=[{"role": "user", "content": request.question}],
             user_id=user_id
         )
         
-        # Invoke the LangGraph orchestrator
         logger.info(f"User {current_user.email} (ID: {user_id}) asked: {request.question}")
         result = hr_agent_graph.invoke(initial_state)
         
-        # Extract the final response
         final_message = result["messages"][-1]
         answer = final_message["content"] if isinstance(final_message, dict) else final_message.content
         
-        # Determine source for response
-        query_type = result.get("query_type")
-        source = "policy_documents" if query_type == "policy" else "personal_database" if query_type == "personal_data" else "general_knowledge"
+        # Extract metadata from result
+        is_multiple = result.get("is_multiple", False)
+        sub_queries = result.get("sub_queries", [])
+        query_type = result.get("query_type", "general")  # ← Now this will work!
         
-        logger.info(f"Query resolved as type: {query_type}, source: {source}")
+        # Map query_type to user-friendly source
+        if query_type == "compound":
+            source = f"multiple_sources ({len(sub_queries)} questions)"
+        elif query_type == "policy":
+            source = "policy_documents"
+        elif query_type == "personal_data":
+            source = "personal_database"
+        elif query_type == "general":
+            source = "general_knowledge"
+        else:
+            source = "unknown"
+        
+        logger.info(f"Query resolved - type: {query_type}, source: {source}")
         
         return ChatResponse(
             answer=answer,
             query_type=query_type,
-            source=source
+            source=source,
+            is_compound=is_multiple,
+            num_questions=len(sub_queries) if sub_queries else 1
         )
         
     except Exception as e:
         logger.error(f"Agentic chatbot error for user {current_user.email}: {str(e)}")
         
-        # Fallback to basic RAG system
+        # Fallback to basic RAG
         try:
             logger.info("Falling back to basic RAG system")
             rag_result = query_hr_documents(request.question)
             return ChatResponse(
                 answer=rag_result["answer"],
                 query_type="policy",
-                source="fallback_rag"
+                source="fallback_rag",
+                is_compound=False,
+                num_questions=1
             )
         except Exception as rag_error:
             logger.error(f"Fallback RAG also failed: {str(rag_error)}")
