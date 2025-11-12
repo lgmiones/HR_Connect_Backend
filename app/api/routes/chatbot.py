@@ -1,13 +1,17 @@
 """
 Chatbot Routes
-Handles HR chatbot queries
+Handles HR chatbot queries with Agentic RAG orchestration
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.models.user import User
 from app.api.dependencies import get_current_user
 from app.services.retriever import query_hr_documents
+from app.Agent.agentic_chatbot import hr_agent_graph, AgentState
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/chatbot", tags=["Chatbot"])
 
@@ -18,7 +22,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
-    # sources: list = []  # Optional: uncomment when you fix source attribution
+    query_type: str | None = None
+    source: str | None = None
 
 
 @router.post("/query", response_model=ChatResponse)
@@ -27,15 +32,22 @@ async def chat_query(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Query the HR chatbot with authenticated access.
+    Query the HR chatbot with Agentic RAG orchestration.
     
     **Requires**: Valid JWT token in Authorization header
+    
+    **Features**:
+    - Routes queries between policy documents and personal employee data
+    - Uses LangGraph for intelligent query classification
+    - Falls back to basic RAG if agent fails
     
     **Parameters**:
     - **question**: The HR-related question to ask
     
     **Returns**:
-    - **answer**: AI-generated response based on HR documents
+    - **answer**: AI-generated response
+    - **query_type**: Type of query (policy/personal_data/general)
+    - **source**: Source of the answer
     
     **Example**:
 ```json
@@ -44,19 +56,95 @@ async def chat_query(
     }
 ```
     """
-    response = query_hr_documents(request.question)
-    return response
+    try:
+        user_id = current_user.user_id
+        
+        # Prepare initial state for LangGraph agent
+        initial_state = AgentState(
+            messages=[{"role": "user", "content": request.question}],
+            user_id=user_id
+        )
+        
+        # Invoke the LangGraph orchestrator
+        logger.info(f"User {current_user.email} (ID: {user_id}) asked: {request.question}")
+        result = hr_agent_graph.invoke(initial_state)
+        
+        # Extract the final response
+        final_message = result["messages"][-1]
+        answer = final_message["content"] if isinstance(final_message, dict) else final_message.content
+        
+        # Determine source for response
+        query_type = result.get("query_type")
+        source = "policy_documents" if query_type == "policy" else "personal_database" if query_type == "personal_data" else "general_knowledge"
+        
+        logger.info(f"Query resolved as type: {query_type}, source: {source}")
+        
+        return ChatResponse(
+            answer=answer,
+            query_type=query_type,
+            source=source
+        )
+        
+    except Exception as e:
+        logger.error(f"Agentic chatbot error for user {current_user.email}: {str(e)}")
+        
+        # Fallback to basic RAG system
+        try:
+            logger.info("Falling back to basic RAG system")
+            rag_result = query_hr_documents(request.question)
+            return ChatResponse(
+                answer=rag_result["answer"],
+                query_type="policy",
+                source="fallback_rag"
+            )
+        except Exception as rag_error:
+            logger.error(f"Fallback RAG also failed: {str(rag_error)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Chatbot service temporarily unavailable. Please try again later."
+            )
 
 
-# Optional: Add conversation history endpoint
 @router.get("/history")
 async def get_chat_history(
     current_user: User = Depends(get_current_user)
 ):
     """
     Get user's chat history (placeholder for future implementation)
+    
+    **Requires**: Valid JWT token in Authorization header
+    
+    **Returns**: User's conversation history
     """
     return {
         "message": "Chat history feature coming soon",
-        "user": current_user.email
+        "user": current_user.email,
+        "user_id": current_user.user_id
     }
+
+
+@router.get("/health")
+async def chatbot_health_check(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Health check for chatbot service
+    
+    **Requires**: Valid JWT token in Authorization header
+    """
+    try:
+        # Test if agent graph is available
+        _ = hr_agent_graph
+        return {
+            "status": "healthy",
+            "service": "Agentic Chatbot",
+            "user": current_user.email
+        }
+    except Exception as e:
+        logger.error(f"Chatbot health check failed: {str(e)}")
+        return {
+            "status": "degraded",
+            "service": "Agentic Chatbot",
+            "message": "Agent graph not available, using fallback RAG",
+            "user": current_user.email
+        }
