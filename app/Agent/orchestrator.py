@@ -52,7 +52,14 @@ def should_continue(state: AgentState) -> str:
 
 def combine_results(state: AgentState) -> dict:
     """Combine all sub-query results into final answer"""
+
+    print("=" * 50)
+    print("COMBINE_RESULTS CALLED!")
+    print(f"State: {state}")
+    print("=" * 50)
+    
     query_results = state.query_results or []
+    sub_queries = state.sub_queries or []
     
     if not query_results:
         final_answer = "I couldn't process your questions. Please try again."
@@ -61,8 +68,23 @@ def combine_results(state: AgentState) -> dict:
     else:
         final_answer = "Here are the answers to your questions:\n\n" + "\n\n---\n\n".join(query_results)
     
+    # Determine query_type for metadata
+    if sub_queries:
+        if len(sub_queries) == 1:
+            # Single query - use its type
+            query_type = sub_queries[0].query_type
+        else:
+            # Multiple queries - mark as compound
+            query_type = "compound"
+    else:
+        query_type = "general"
+    
+    # Return ALL relevant state information
     return {
-        "messages": [{"role": "assistant", "content": final_answer}]
+        "messages": [{"role": "assistant", "content": final_answer}],
+        "query_type": query_type,        
+        "is_multiple": state.is_multiple, 
+        "sub_queries": sub_queries       
     }
 
 

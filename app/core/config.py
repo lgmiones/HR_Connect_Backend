@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     AZURE_OPENAI_API_KEY: str | None = None
     AZURE_OPENAI_ENDPOINT: str | None = None
     AZURE_OPENAI_DEPLOYMENT: str | None = None
+    AZURE_OPENAI_API_VERSION: str = "2024-02-15-preview"
 
     GROQ_API_KEY: str
 

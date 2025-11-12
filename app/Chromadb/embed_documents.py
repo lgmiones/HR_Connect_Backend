@@ -3,7 +3,7 @@ import os
 from sentence_transformers import SentenceTransformer
 from langchain_chroma.vectorstores import Chroma
 from langchain.embeddings.base import Embeddings
-from file_loader import load_hr_documents, split_documents
+from app.Chromadb.file_loader import load_hr_documents, split_documents 
 import logging
 
 # Configure logging

@@ -35,3 +35,4 @@ class AgentState(BaseModel):
     current_query_index: int = 0
     query_results: List[str] | None = None
     user_id: int | None = None
+    query_type: str | None = None  

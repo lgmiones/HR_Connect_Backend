@@ -72,21 +72,24 @@ async def chat_query(
         final_message = result["messages"][-1]
         answer = final_message["content"] if isinstance(final_message, dict) else final_message.content
         
-        # Better metadata handling for compound queries
+        # Extract metadata from result
         is_multiple = result.get("is_multiple", False)
         sub_queries = result.get("sub_queries", [])
+        query_type = result.get("query_type", "general")  # ← Now this will work!
         
-        if is_multiple and sub_queries:
-            # Compound query - determine dominant type
-            query_types = [sq.query_type for sq in sub_queries]
-            query_type = "compound"
-            source = f"multiple_sources ({len(query_types)} questions)"
+        # Map query_type to user-friendly source
+        if query_type == "compound":
+            source = f"multiple_sources ({len(sub_queries)} questions)"
+        elif query_type == "policy":
+            source = "policy_documents"
+        elif query_type == "personal_data":
+            source = "personal_database"
+        elif query_type == "general":
+            source = "general_knowledge"
         else:
-            # Single query
-            query_type = result.get("query_type", "general")
-            source = "policy_documents" if query_type == "policy" else "personal_database" if query_type == "personal_data" else "general_knowledge"
+            source = "unknown"
         
-        logger.info(f"Query resolved as type: {query_type}, source: {source}")
+        logger.info(f"Query resolved - type: {query_type}, source: {source}")
         
         return ChatResponse(
             answer=answer,
@@ -99,14 +102,16 @@ async def chat_query(
     except Exception as e:
         logger.error(f"Agentic chatbot error for user {current_user.email}: {str(e)}")
         
-        # Fallback to basic RAG system
+        # Fallback to basic RAG
         try:
             logger.info("Falling back to basic RAG system")
             rag_result = query_hr_documents(request.question)
             return ChatResponse(
                 answer=rag_result["answer"],
                 query_type="policy",
-                source="fallback_rag"
+                source="fallback_rag",
+                is_compound=False,
+                num_questions=1
             )
         except Exception as rag_error:
             logger.error(f"Fallback RAG also failed: {str(rag_error)}")
