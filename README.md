@@ -27,29 +27,29 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 
 ---
 
-## ✨ Features
+##  Features
 
-### 🤖 Intelligent Agentic Chatbot
+### Intelligent Agentic Chatbot
 - **Query Classification** - Automatically determines if questions are about policies or personal data
 - **Multi-Source RAG** - Routes queries to appropriate data sources (Chroma DB or SQL Server)
 - **Compound Query Handling** - Processes multiple questions in one request
 - **Smart Context Management** - Maintains conversation state across queries
 
-### 🔐 Authentication & Security
+### Authentication & Security
 - JWT-based authentication
 - Password hashing with bcrypt
 - Token blacklisting for logout
 - Protected API endpoints
 - Role-based access control ready
 
-### 📊 HR Management Features
+### HR Management Features
 - Employee leave balance tracking
 - Leave request management
 - Company policy document search
 - Attendance records (planned)
 - Performance reviews (planned)
 
-### 🎯 Advanced RAG System
+### Advanced RAG System
 - **Vector Search** - ChromaDB for policy document retrieval
 - **Semantic Search** - SentenceTransformer embeddings
 - **SQL Integration** - Direct database queries for employee data
@@ -57,7 +57,7 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    User Request                         │
@@ -112,7 +112,7 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend Framework
 - **FastAPI** - Modern, fast web framework for building APIs
@@ -144,7 +144,7 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites
 
 - Python 3.11+
 - SQL Server (local or Azure)
@@ -153,7 +153,7 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -255,7 +255,7 @@ CREATE TABLE leave_balance (
 
 ---
 
-## 🏃 Running the Application
+## Running the Application
 
 ### Development Mode
 ```bash
@@ -271,7 +271,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 ### Interactive Documentation
 
@@ -350,7 +350,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/chatbot/query \
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 ```
 HR_Connect_Backend/
 ├── app/
@@ -416,7 +416,7 @@ HR_Connect_Backend/
 
 ---
 
-## 💡 Usage Examples
+## Usage Examples
 
 ### Single Query - Personal Data
 
@@ -509,7 +509,7 @@ python -m app.Chromadb.embed_documents
 
 ---
 
-## 🧪 Testing Checklist
+## Testing Checklist
 
 - [ ] Register new user
 - [ ] Login with credentials
@@ -544,7 +544,7 @@ python -m app.Chromadb.embed_documents
 
 ---
 
-## 👥 Team
+## Team
 
 **HRConnect Development Team**
 - Team Size: 7 members
@@ -560,13 +560,13 @@ This project is developed as a capstone project for educational purposes.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is a capstone project. For questions or suggestions, please contact the development team.
 
 ---
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 - [ ] Conversation history tracking
 - [ ] Feedback mechanism for chatbot responses
@@ -581,7 +581,7 @@ This is a capstone project. For questions or suggestions, please contact the dev
 
 ---
 
-## 📞 Support
+## Support
 
 For issues or questions:
 1. Check the [API Documentation](http://127.0.0.1:8000/docs)
@@ -590,7 +590,7 @@ For issues or questions:
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Azure OpenAI** for LLM capabilities
 - **LangChain** for RAG framework
@@ -600,6 +600,6 @@ For issues or questions:
 
 ---
 
-**Built with ❤️ by the HRConnect Team**
+**Built with by the HRConnect Team**
 
 *Last Updated: November 2025*
