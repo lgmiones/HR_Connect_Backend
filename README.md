@@ -125,42 +125,33 @@ The system includes an **Entity Relationship Diagram (ERD)** representing the st
 
 ---
 
-### 4.4 Challenges & Solutions
-
-| **Challenge** | **Solution** |
-|----------------|--------------|
-| Managing real-time attendance data | Implement API-based syncing and validation. |
-| Ensuring accurate leave calculation | Apply automated leave balance computation rules. |
-| Providing accurate chatbot responses | Maintain a structured HR policy knowledge base. |
-| Handling multiple user roles securely | Implement Role-Based Access Control (RBAC). |
-| System performance during high usage | Optimize database queries and caching mechanisms. |
-
----
-
-⚙️ Installation & Setup
+### 4.4 Installation & Setup
 Follow these steps to run HRConnect locally:
-Clone the repository
-1. git clone https://github.com/your-org/hrconnect.git
+**Clone the repository**
+**1. git clone https://github.com/your-org/hrconnect.git
 cd hrconnect
-2. Set up the backend
+
+**2. Set up the backend
 cd HR_Connect_Backend
 pip install -r requirements.txt
 
-3. Configure environment variables
+**3. Configure environment variables
 Create a .env file and add:
 DATABASE_URL=mssql+pyodbc://(localdb)\MSSQLLocalDB/HRConnectDB?driver=ODBC+Driver+17+for+SQL+Server
 AZURE_OPENAI_API_KEY=your-api-key
 SECRET_KEY=your-secret-key
 
-4. Run the FastAPI server
+**4. Run the FastAPI server
 cd HR_Connect_Frontend
 npm install
 npm run dev
-5. Run the frontend (optional)
+
+**5. Run the frontend (optional)
 cd HR_Connect_Frontend
 npm install
 npm run dev
-6. Access the system
+
+**6. Access the system
 Open your browser and go to:
 http://localhost:8000 (Backend API)
  http://localhost:3000 (Frontend UI)
@@ -184,3 +175,4 @@ For inquiries or collaboration opportunities:
 📧 **sdalipio@n-pax.com*
     **eyong@n-pax.com*
     **rlsanchez@n-pax.com*
+
