@@ -94,12 +94,12 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
          ↓                      ↓
          └──────────┬───────────┘
                     ↓
-        ┌──────────────────────┐
-        │  Azure OpenAI        │
-        │  (GPT-4o-mini)       │
-        │  - Query Classification
-        │  - Response Generation
-        └──────────────────────┘
+        ┌──────────────────────────┐
+        │  Azure OpenAI            │
+        │  (GPT-5-mini)            │
+        │  - Query Classification  |
+        │  - Response Generation   |
+        └──────────────────────────┘
 ```
 
 ### Key Components
