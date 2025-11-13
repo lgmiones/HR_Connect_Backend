@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  backend:
+    build: .
+    container_name: hrconnect-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./chroma_db:/app/chroma_db
+      - ./docs:/app/docs
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+    depends_on:
+      - sqlserver
+    restart: unless-stopped
+    networks:
+      - hrconnect-network
+
+  # SQL Server (Optional - for local development)
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: hrconnect-sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password123
+      - MSSQL_PID=Express
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    restart: unless-stopped
+    networks:
+      - hrconnect-network
+
+volumes:
+  sqlserver-data:
+
+networks:
+  hrconnect-network:
+    driver: bridge
