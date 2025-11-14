@@ -1,89 +1,74 @@
 # embed_documents.py
-import os
-from sentence_transformers import SentenceTransformer
-from langchain_chroma.vectorstores import Chroma
-from langchain.embeddings.base import Embeddings
-from app.Chromadb.file_loader import load_hr_documents, split_documents 
 import logging
+from sentence_transformers import SentenceTransformer
+from langchain_chroma import Chroma
+from langchain.embeddings.base import Embeddings
+from app.Chromadb.file_loader import load_hr_documents, split_documents
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class SentenceTransformerEmbeddings(Embeddings):
-    def __init__(self, model_name="all-MiniLM-L6-v2"):
-        from sentence_transformers import SentenceTransformer
+    """LangChain-compatible wrapper for sentence-transformers."""
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        self.model_name = model_name
         self.model = SentenceTransformer(model_name)
 
     def embed_documents(self, texts):
-        return self.model.encode(
+        # returns list[list[float]]
+        emb = self.model.encode(
             texts,
             show_progress_bar=True,
             convert_to_numpy=True,
-            normalize_embeddings=True
-        ).tolist()
+            normalize_embeddings=True,
+            batch_size=32
+        )
+        return emb.tolist()
 
     def embed_query(self, text):
-        return self.model.encode(
-            [text],
-            convert_to_numpy=True,
-            normalize_embeddings=True
-        )[0].tolist()
+        emb = self.model.encode([text], convert_to_numpy=True, normalize_embeddings=True)
+        return emb[0].tolist()
 
-class DocumentEmbedder:
-    def __init__(self, model_name="all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
-        self.model_name = model_name
-    
-    def embed_function(self, texts):
-        """Enhanced embedding function with progress tracking"""
-        logger.info(f"🔧 Generating embeddings for {len(texts)} chunks...")
-        embeddings = self.model.encode(
-            texts,
-            show_progress_bar=True,
-            convert_to_numpy=True,
-            normalize_embeddings=True,  # Important for similarity search
-            batch_size=32  # Adjust based on available memory
-        )
-        logger.info(f"✅ Generated embeddings shape: {embeddings.shape}")
-        return embeddings
-
-def setup_vector_store():
-    """Main function to setup ChromaDB with documents"""
-    
-    # Load and process documents
-    logger.info("📚 Loading HR documents...")
-    docs = load_hr_documents("./data/hr_docs")
-    
+def setup_vector_store(
+    docs_folder: str = "./data/hr_docs",
+    persist_directory: str = "./chroma_db",
+    collection_name: str = "hr_documents",
+    chunk_size: int = 800,
+    chunk_overlap: int = 150,
+    model_name: str = "all-MiniLM-L6-v2",
+):
+    logger.info("📚 Loading documents...")
+    docs = load_hr_documents(docs_folder)
     if not docs:
-        logger.error("❌ No documents found to process!")
+        logger.error("❌ No documents found. Aborting.")
         return None
-    
+
     logger.info("✂️ Splitting documents into chunks...")
-    split_docs = split_documents(docs, chunk_size=800, chunk_overlap=150)
-    
-    # Initialize embedder
-    embedding = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-    
-    # Create vector store
-    logger.info("💾 Creating vector store...")
-    
+    split_docs = split_documents(docs, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
+    logger.info("🔧 Initializing embedding function...")
+    embedding = SentenceTransformerEmbeddings(model_name=model_name)
+
+    logger.info("💾 Creating Chroma vector store (from_documents)...")
     vectorstore = Chroma.from_documents(
         documents=split_docs,
         embedding=embedding,
-        persist_directory="./chroma_db",
-        collection_name="hr_documents"
+        persist_directory=persist_directory,
+        collection_name=collection_name
     )
-    
-    # Verify setup
-    collection_count = vectorstore._collection.count()
-    logger.info(f"🎉 ChromaDB setup complete! Collection has {collection_count} documents")
-    
+
+    # Optionally log counts (safe call)
+    try:
+        count = vectorstore._collection.count()
+        logger.info("🎉 Chroma collection '%s' contains %d vectors", collection_name, count)
+    except Exception:
+        logger.debug("Skipping collection.count() logging (not available).")
+
     return vectorstore
 
 if __name__ == "__main__":
-    vectorstore = setup_vector_store()
-    if vectorstore:
-        logger.info("✅ HR Document embedding pipeline completed successfully!")
+    vs = setup_vector_store()
+    if vs:
+        logger.info("✅ Indexing complete.")
     else:
-        logger.error("❌ HR Document embedding pipeline failed!")
+        logger.error("❌ Indexing failed.")
