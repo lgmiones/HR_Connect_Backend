@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     AZURE_OPENAI_DEPLOYMENT: str | None = None
     AZURE_OPENAI_API_VERSION: str = "2024-02-15-preview"
 
+    # Azure Embeddings
+    AZURE_EMBEDDINGS_DEPLOYMENT: str | None = None
+    AZURE_EMBEDDINGS_ENDPOINT: str | None = None
+    AZURE_EMBEDDINGS_API_KEY: str | None = None
+
     GROQ_API_KEY: str
 
     class Config:
