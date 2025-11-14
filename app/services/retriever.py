@@ -6,15 +6,20 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import AzureChatOpenAI
 from dotenv import load_dotenv
-from app.Chromadb.embed_documents import SentenceTransformerEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings
 from app.core.config import settings 
 
 load_dotenv()
 
 def query_hr_documents(question: str):
-    # Initialize embeddings
-    embedding = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-    
+
+    embedding = AzureOpenAIEmbeddings(
+        azure_endpoint=settings.AZURE_EMBEDDINGS_ENDPOINT,
+        azure_deployment=settings.AZURE_EMBEDDINGS_DEPLOYMENT,
+        api_key=settings.AZURE_EMBEDDINGS_API_KEY,
+        api_version=settings.AZURE_OPENAI_API_VERSION
+    )
+
     vectorstore = Chroma(
         persist_directory="./chroma_db",
         collection_name="hr_documents",
