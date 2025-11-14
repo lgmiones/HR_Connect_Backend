@@ -4,6 +4,7 @@ HRConnect API - Main Application
 
 from fastapi import FastAPI
 from app.api.routes import auth, chatbot
+from app.api.routes import emergency_leave, vacation_leave, sick_leave
 
 app = FastAPI(
     title="HRConnect API",
@@ -17,6 +18,9 @@ app = FastAPI(
 # Include routers
 app.include_router(auth.router)
 app.include_router(chatbot.router)
+app.include_router(emergency_leave.router)
+app.include_router(vacation_leave.router)
+app.include_router(sick_leave.router)
 
 
 @app.get("/")

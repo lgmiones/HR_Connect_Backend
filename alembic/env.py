@@ -8,9 +8,11 @@ from alembic import context
 # Import your settings and models
 from app.core.config import settings
 from app.models.user import Base  
-from app.models.leave_balance import Base  
 from app.models.chat_conversation import Base
 from app.models.chat_message import Base
+from app.models.vacation_leave import Base
+from app.models.sick_leave import Base
+from app.models.emergency_leave import Base
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
