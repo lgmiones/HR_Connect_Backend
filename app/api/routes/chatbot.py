@@ -1,21 +1,22 @@
 """
 Chatbot Routes
 Handles HR chatbot queries with Agentic RAG orchestration
+OPTIMIZED: Added performance tracking
 """
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.models.user import User
 from app.api.dependencies import get_current_user
-from app.services.retriever import query_hr_documents
+# ❌ REMOVE THIS: from app.services.retriever import query_hr_documents
 from app.Agent import hr_agent_graph, AgentState
-#for CHATBOT HISTORY
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from typing import Optional
 from app.services.chatbot_service import ChatbotService
 
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/api/v1/chatbot", tags=["Chatbot"])
 
 class ChatRequest(BaseModel):
     question: str
-    conversation_id: Optional[int] = None # Optional: link to existing conversation
+    conversation_id: Optional[int] = None
 
 class ChatResponse(BaseModel):
     answer: str
@@ -34,6 +35,7 @@ class ChatResponse(BaseModel):
     num_questions: int = 1
     conversation_id: int
     message_id: int
+    response_time: float = 0.0
 
 
 @router.post("/query", response_model=ChatResponse)
@@ -51,14 +53,17 @@ async def chat_query(
     - Routes queries between policy documents and personal employee data
     - Uses LangGraph for intelligent query classification
     - Falls back to basic RAG if agent fails
+    - **OPTIMIZED: <5s response time for simple queries**
     
     **Parameters**:
     - **question**: The HR-related question to ask
+    - **conversation_id**: (Optional) Continue existing conversation
     
     **Returns**:
     - **answer**: AI-generated response
-    - **query_type**: Type of query (policy/personal_data/general)
+    - **query_type**: Type of query (policy/personal_data/general/compound)
     - **source**: Source of the answer
+    - **response_time**: Time taken to process (seconds)
     
     **Example**:
 ```json
@@ -67,12 +72,13 @@ async def chat_query(
     }
 ```
     """
+    start_time = time.time()
+    
     try:
         user_id = current_user.user_id
 
         # Create or get conversation
         if request.conversation_id:
-            # Verify user owns this conversation
             conversation = ChatbotService.get_conversation(
                 db, 
                 request.conversation_id, 
@@ -84,7 +90,6 @@ async def chat_query(
                     detail="Conversation not found"
                 )
         else:
-            # Create new conversation
             conversation = ChatbotService.create_conversation(
                 db,
                 user_id,
@@ -104,16 +109,17 @@ async def chat_query(
             user_id=user_id
         )
         
-        logger.info(f"User {current_user.email} (ID: {user_id}) asked: {request.question}")
+        logger.info(f"User {current_user.email} asked: {request.question}")
+        
         result = hr_agent_graph.invoke(initial_state)
         
         final_message = result["messages"][-1]
         answer = final_message["content"] if isinstance(final_message, dict) else final_message.content
         
-        # Extract metadata from result
+        # Extract metadata
         is_multiple = result.get("is_multiple", False)
         sub_queries = result.get("sub_queries", [])
-        query_type = result.get("query_type", "general")  # ← Now this will work!
+        query_type = result.get("query_type", "general")
         
         # Map query_type to user-friendly source
         if query_type == "compound":
@@ -134,7 +140,12 @@ async def chat_query(
             answer
         )
         
-        logger.info(f"Query resolved - type: {query_type}, source: {source}")
+        elapsed = time.time() - start_time
+        
+        if elapsed < 5.0:
+            logger.info(f"✅ Query resolved in {elapsed:.2f}s - type: {query_type}")
+        else:
+            logger.warning(f"⚠️ SLOW QUERY ({elapsed:.2f}s) - type: {query_type}, question: '{request.question}'")
         
         return ChatResponse(
             answer=answer,
@@ -143,7 +154,8 @@ async def chat_query(
             is_compound=is_multiple,
             num_questions=len(sub_queries) if sub_queries else 1,
             conversation_id=conversation.conversation_id,
-            message_id=bot_message.message_id
+            message_id=bot_message.message_id,
+            response_time=round(elapsed, 2)
         )
         
     except HTTPException:
@@ -153,7 +165,12 @@ async def chat_query(
         
         # Fallback to basic RAG
         try:
+            # ✅ LAZY IMPORT - only import when needed for fallback
+            from app.services.retriever import query_hr_documents
+            
             logger.info("Falling back to basic RAG system")
+            fallback_start = time.time()
+            
             rag_result = query_hr_documents(request.question)
 
             # Store fallback response
@@ -162,6 +179,8 @@ async def chat_query(
                 conversation.conversation_id,
                 rag_result["answer"]
             )
+            
+            fallback_elapsed = time.time() - fallback_start
 
             return ChatResponse(
                 answer=rag_result["answer"],
@@ -170,7 +189,8 @@ async def chat_query(
                 is_compound=False,
                 num_questions=1,
                 conversation_id=conversation.conversation_id,
-                message_id=bot_message.message_id
+                message_id=bot_message.message_id,
+                response_time=round(fallback_elapsed, 2)
             )
         except Exception as rag_error:
             logger.error(f"Fallback RAG also failed: {str(rag_error)}")
@@ -185,13 +205,7 @@ async def get_chat_history(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get user's chat history - all conversations
-    
-    **Requires**: Valid JWT token in Authorization header
-    
-    **Returns**: User's conversation history
-    """
+    """Get user's chat history - all conversations"""
     try:
         conversations = ChatbotService.get_user_conversations(
             db,
@@ -204,7 +218,7 @@ async def get_chat_history(
             "total_conversations": len(conversations)
         }
     except Exception as e:
-        logger.error(f"Error retrieving chat history for user {current_user.email}: {str(e)}")
+        logger.error(f"Error retrieving chat history: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail="Failed to retrieve chat history"
@@ -217,16 +231,7 @@ async def get_conversation_detail(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get a specific conversation with all messages
-    
-    **Requires**: Valid JWT token in Authorization header
-    
-    **Parameters**:
-    - **conversation_id**: ID of the conversation to retrieve
-    
-    **Returns**: Conversation details with all messages
-    """
+    """Get a specific conversation with all messages"""
     try:
         conversation = ChatbotService.get_conversation(
             db,
@@ -257,7 +262,7 @@ async def get_conversation_detail(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving conversation {conversation_id} for user {current_user.email}: {str(e)}")
+        logger.error(f"Error retrieving conversation: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail="Failed to retrieve conversation"
@@ -270,14 +275,7 @@ async def delete_conversation(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Delete a conversation and all its messages
-    
-    **Requires**: Valid JWT token in Authorization header
-    
-    **Parameters**:
-    - **conversation_id**: ID of the conversation to delete
-    """
+    """Delete a conversation and all its messages"""
     try:
         success = ChatbotService.delete_conversation(
             db,
@@ -296,30 +294,31 @@ async def delete_conversation(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting conversation {conversation_id} for user {current_user.email}: {str(e)}")
+        logger.error(f"Error deleting conversation: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail="Failed to delete conversation"
         )
 
 
-
 @router.get("/health")
 async def chatbot_health_check(
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Health check for chatbot service
-    
-    **Requires**: Valid JWT token in Authorization header
-    """
+    """Health check for chatbot service"""
     try:
-        # Test if agent graph is available
         _ = hr_agent_graph
         return {
             "status": "healthy",
-            "service": "Agentic Chatbot",
-            "user": current_user.email
+            "service": "Agentic Chatbot (Optimized)",
+            "user": current_user.email,
+            "optimizations": [
+                "Cached LLM instances",
+                "Cached vectorstore",
+                "Fast-path query routing",
+                "Context trimming",
+                "Performance tracking"
+            ]
         }
     except Exception as e:
         logger.error(f"Chatbot health check failed: {str(e)}")
