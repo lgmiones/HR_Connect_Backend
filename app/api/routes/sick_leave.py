@@ -11,7 +11,7 @@ from app.api.dependencies import get_current_user
 from app.services.generic_post import post_leave
 from app.db.session import get_db
 from app.services.leave_service import LeaveService
-from app.schemas.leave_schemas import SickLeaveResponse, UpdateLeaveRequest
+from app.schemas.leave_schemas import SickLeaveResponse, UpdateLeaveRequest, SickLeaveHistoryResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,42 +35,14 @@ async def create_sick_leave(
     return leave
 
 
-@router.get("", response_model=SickLeaveResponse)
-async def get_sick_leave(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    **GET** - Retrieve sick leave balance
-    
-    **Requires**: Valid JWT token in Authorization header
-    
-    **Returns**:
-    - sick_id: Unique identifier
-    - user_id: User ID
-    - total_days: Total sick days allowed (10)
-    - used_days: Days already used
-    - last_updated: Last update date
-    
-    **Example Response**:
-    ```json
-    {
-        "sick_id": 1,
-        "user_id": 1,
-        "total_days": 10,
-        "used_days": 2,
-        "last_updated": "2025-11-13"
-    }
-    ```
-    """
-    try:
-        leave = LeaveService.get_or_create_sick_leave(db, current_user.user_id)
-        logger.info(f"Retrieved sick leave for user {current_user.user_id}")
-        return leave
-    except Exception as e:
-        logger.error(f"Error fetching sick leave: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve sick leave")
+@router.get("/balance", response_model=SickLeaveResponse)
+def get_vacation_balance(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return LeaveService.get_or_create_sick_leave(db, current_user.user_id)
 
+@router.get("/history", response_model=SickLeaveHistoryResponse)
+def get_vacation_history(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    history = LeaveService.get_sick_leave_history(db, current_user.user_id)
+    return {"history": history}
 
 @router.put("", response_model=SickLeaveResponse)
 async def update_sick_leave(

@@ -197,3 +197,21 @@ class LeaveService:
         leave.used_days += used_days
         leave.last_updated = date.today()
         return leave
+    
+    @staticmethod
+    def get_vacation_leave_history(db: Session, user_id: int):
+        return db.query(VacationLeaveRequest).filter(
+            VacationLeaveRequest.user_id == user_id
+        ).order_by(VacationLeaveRequest.created_at.desc()).all()
+
+    @staticmethod
+    def get_sick_leave_history(db: Session, user_id: int):
+        return db.query(SickLeaveRequest).filter(
+            SickLeaveRequest.user_id == user_id
+        ).order_by(SickLeaveRequest.created_at.desc()).all()
+
+    @staticmethod
+    def get_emergency_leave_history(db: Session, user_id: int):
+        return db.query(EmergencyLeaveRequest).filter(
+            EmergencyLeaveRequest.user_id == user_id
+        ).order_by(EmergencyLeaveRequest.created_at.desc()).all()

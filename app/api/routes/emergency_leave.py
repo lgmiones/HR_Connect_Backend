@@ -11,7 +11,7 @@ from app.services.generic_post import post_leave
 from app.api.dependencies import get_current_user
 from app.db.session import get_db
 from app.services.leave_service import LeaveService
-from app.schemas.leave_schemas import EmergencyLeaveResponse, UpdateLeaveRequest
+from app.schemas.leave_schemas import EmergencyLeaveResponse, UpdateLeaveRequest, EmergencyLeaveHistoryResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,42 +34,14 @@ async def create_emergency_leave(
     )
     return leave
 
-@router.get("", response_model=EmergencyLeaveResponse)
-async def get_emergency_leave(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    **GET** - Retrieve emergency leave balance
-    
-    **Requires**: Valid JWT token in Authorization header
-    
-    **Returns**:
-    - emergency_id: Unique identifier
-    - user_id: User ID
-    - total_days: Total emergency days allowed (8)
-    - used_days: Days already used
-    - last_updated: Last update date
-    
-    **Example Response**:
-    ```json
-    {
-        "emergency_id": 1,
-        "user_id": 1,
-        "total_days": 8,
-        "used_days": 1,
-        "last_updated": "2025-11-13"
-    }
-    ```
-    """
-    try:
-        leave = LeaveService.get_or_create_emergency_leave(db, current_user.user_id)
-        logger.info(f"Retrieved emergency leave for user {current_user.user_id}")
-        return leave
-    except Exception as e:
-        logger.error(f"Error fetching emergency leave: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve emergency leave")
+@router.get("/balance", response_model=EmergencyLeaveResponse)
+def get_vacation_balance(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return LeaveService.get_or_create_emergency_leave(db, current_user.user_id)
 
+@router.get("/history", response_model=EmergencyLeaveHistoryResponse)
+def get_vacation_history(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    history = LeaveService.get_emergency_leave_history(db, current_user.user_id)
+    return {"history": history}
 
 @router.put("", response_model=EmergencyLeaveResponse)
 async def update_emergency_leave(
