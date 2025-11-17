@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional
-
+from datetime import datetime
 
 class LeaveBalanceBase(BaseModel):
     total_days: int
@@ -46,3 +46,23 @@ class UpdateLeaveRequest(BaseModel):
     """Request to update used days"""
     used_days: int
     reason: str
+
+class LeaveRequestBase(BaseModel):
+    used_days: int
+    reason: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class VacationLeaveHistoryResponse(BaseModel):
+    history: list[LeaveRequestBase]
+
+
+class SickLeaveHistoryResponse(BaseModel):
+    history: list[LeaveRequestBase]
+
+
+class EmergencyLeaveHistoryResponse(BaseModel):
+    history: list[LeaveRequestBase]
