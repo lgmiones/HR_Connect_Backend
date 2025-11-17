@@ -25,7 +25,13 @@ async def create_sick_leave(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return post_leave(db, current_user.user_id, request.used_days, "sick")
+    return post_leave(
+        db,
+        current_user.user_id,
+        request.used_days,
+        "sick",
+        reason=request.reason
+    )
 
 
 @router.get("", response_model=SickLeaveResponse)

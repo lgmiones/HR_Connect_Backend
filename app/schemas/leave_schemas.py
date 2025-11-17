@@ -45,3 +45,4 @@ class AllLeaveBalanceResponse(BaseModel):
 class UpdateLeaveRequest(BaseModel):
     """Request to update used days"""
     used_days: int
+    reason: str
