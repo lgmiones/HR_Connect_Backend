@@ -6,6 +6,8 @@ Handles emergency leave balance operations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.user import User
+from app.models.emergency_leave import EmergencyLeave
+from app.services.generic_post import post_leave
 from app.api.dependencies import get_current_user
 from app.db.session import get_db
 from app.services.leave_service import LeaveService
@@ -15,6 +17,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/emergency-leave", tags=["Emergency Leave"])
+
+
+@router.post("", response_model=EmergencyLeaveResponse, status_code=201)
+async def create_emergency_leave(
+    request: UpdateLeaveRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return post_leave(db, current_user.user_id, request.used_days, "emergency")
 
 
 @router.get("", response_model=EmergencyLeaveResponse)
@@ -52,41 +63,6 @@ async def get_emergency_leave(
     except Exception as e:
         logger.error(f"Error fetching emergency leave: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve emergency leave")
-
-
-@router.post("", response_model=EmergencyLeaveResponse, status_code=status.HTTP_201_CREATED)
-async def create_emergency_leave(
-    request: UpdateLeaveRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    **POST** - Create/Initialize emergency leave for user
-    
-    **Requires**: Valid JWT token in Authorization header
-    
-    **Parameters**:
-    - **used_days**: Initial used days (default: 0)
-    
-    **Example Request**:
-    ```json
-    {
-        "used_days": 0
-    }
-    ```
-    
-    **Returns**: Emergency leave record
-    """
-    try:
-        leave = LeaveService.get_or_create_emergency_leave(db, current_user.user_id)
-        leave.used_days = request.used_days
-        db.commit()
-        db.refresh(leave)
-        logger.info(f"Created/Updated emergency leave for user {current_user.user_id}")
-        return leave
-    except Exception as e:
-        logger.error(f"Error creating emergency leave: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to create emergency leave")
 
 
 @router.put("", response_model=EmergencyLeaveResponse)

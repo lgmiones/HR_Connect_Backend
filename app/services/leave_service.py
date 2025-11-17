@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.vacation_leave import VacationLeave
 from app.models.sick_leave import SickLeave
 from app.models.emergency_leave import EmergencyLeave
-
+from datetime import date
 
 class LeaveService:
     """Service for managing leave balances"""
@@ -96,3 +96,41 @@ class LeaveService:
     def get_remaining_days(total_days: int, used_days: int) -> int:
         """Calculate remaining days"""
         return total_days - used_days
+    
+    @staticmethod
+    def get_or_create_leave(db: Session, user_id: int, leave_type: str):
+        """
+        Generic method to get or create a leave record.
+        leave_type: "vacation", "sick", "emergency"
+        """
+        model_map = {
+            "vacation": VacationLeave,
+            "sick": SickLeave,
+            "emergency": EmergencyLeave
+        }
+
+        if leave_type not in model_map:
+            raise ValueError("Invalid leave type")
+
+        Model = model_map[leave_type]
+        leave = db.query(Model).filter(Model.user_id == user_id).first()
+
+        if not leave:
+            leave = Model(user_id=user_id)
+            db.add(leave)
+            db.commit()
+            db.refresh(leave)
+
+        return leave
+
+    @staticmethod
+    def deduct_leave_days(leave, used_days: int):
+        """
+        Deduct used_days from total_days and update the leave record
+        """
+        if used_days + leave.used_days > leave.total_days:
+            raise ValueError("Used days cannot exceed total days")
+
+        leave.used_days += used_days
+        leave.last_updated = date.today()
+        return leave
