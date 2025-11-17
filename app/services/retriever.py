@@ -1,5 +1,5 @@
 """
-Retriever service - OPTIMIZED with Azure Embeddings, caching, and detailed timing
+Retriever service - OPTIMIZED with Azure Embeddings (maximum performance)
 """
 
 import os
@@ -16,19 +16,17 @@ from app.Agent.utils.llm_config import get_llm
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-# ✅ OPTIMIZATION: Singleton pattern - cache embeddings and vectorstore
 _embedding = None
 _vectorstore = None
 
 
 def get_vectorstore():
-    """Get or create vectorstore instance with Azure embeddings (singleton)"""
+    """Get or create vectorstore with Azure embeddings (singleton)"""
     global _embedding, _vectorstore
     
     if _vectorstore is None:
         logger.info("Initializing Azure embeddings and vectorstore...")
         
-        # ✅ Use Azure OpenAI Embeddings
         _embedding = AzureOpenAIEmbeddings(
             azure_endpoint=settings.AZURE_EMBEDDINGS_ENDPOINT,
             azure_deployment=settings.AZURE_EMBEDDINGS_DEPLOYMENT,
@@ -46,75 +44,52 @@ def get_vectorstore():
     return _vectorstore
 
 
-def query_hr_documents(question: str, k: int = 3):
+def query_hr_documents(question: str, k: int = 2):  # ✅ Reduced to 2 docs
     """
-    Query HR documents using ChromaDB + LLM with detailed timing
+    Query HR documents - MAXIMUM OPTIMIZATION with Azure Embeddings
     
-    OPTIMIZATIONS:
-    - Cached Azure embeddings (singleton)
-    - Cached vectorstore (singleton)
-    - Cached LLM instance (singleton)
-    - Reduced k to 3 (fewer docs)
-    - Context trimming to 1500 chars
-    - Performance monitoring
-    
-    Args:
-        question: User's question
-        k: Number of documents to retrieve (default: 3)
-        
-    Returns:
-        dict with 'answer' key
+    Performance targets with Azure Embeddings:
+    - Query embedding: ~2.7s (Azure API - cannot optimize)
+    - ChromaDB search: ~0.1s
+    - LLM generation: ~5-6s (optimized)
+    - Total: ~8-9s
     """
     
     total_start = time.time()
     
     try:
-        logger.info(f"🔍 Querying HR documents: {question}")
+        logger.info(f"🔍 Querying: {question}")
         
-        # TIME: Get vectorstore (cached)
+        # Get vectorstore (cached)
         vs_start = time.time()
         vectorstore = get_vectorstore()
-        vs_time = time.time() - vs_start
-        logger.info(f"⏱️ Get vectorstore: {vs_time:.2f}s")
+        logger.info(f"⏱️ Vectorstore: {(time.time() - vs_start):.2f}s")
 
-        # TIME: ChromaDB similarity search
+        # ChromaDB search (includes Azure embedding API call)
         search_start = time.time()
         docs = vectorstore.similarity_search(query=question, k=k)
-        search_time = time.time() - search_start
-        logger.info(f"⏱️ ChromaDB search: {search_time:.2f}s")
+        logger.info(f"⏱️ ChromaDB search (with Azure embedding): {(time.time() - search_start):.2f}s")
         logger.info(f"Retrieved {len(docs)} documents")
 
-        # TIME: Build context with trimming
-        context_start = time.time()
+        # Build context - AGGRESSIVE trimming
         context = "\n\n".join([d.page_content for d in docs])
         
-        # ✅ OPTIMIZATION: Aggressive context trimming
-        max_context_length = 1500
+        max_context_length = 1000  # ✅ Very aggressive for speed
         if len(context) > max_context_length:
             context = context[:max_context_length] + "..."
-            logger.info(f"Context trimmed to {max_context_length} chars")
         
-        context_time = time.time() - context_start
-        logger.info(f"⏱️ Build context: {context_time:.2f}s")
+        logger.info(f"📝 Context: {len(context)} chars")
 
-        # TIME: Get LLM (cached)
-        llm_get_start = time.time()
+        # Get LLM (cached)
         llm = get_llm()
-        llm_get_time = time.time() - llm_get_start
-        logger.info(f"⏱️ Get LLM: {llm_get_time:.2f}s")
 
-        # ✅ OPTIMIZATION: Concise prompt
+        # ✅ ULTRA-MINIMAL prompt (absolute minimum tokens)
         prompt = PromptTemplate(
             input_variables=["context", "question"],
-            template=(
-                "Answer based on the HR policy below. Be concise.\n\n"
-                "Policy:\n{context}\n\n"
-                "Question: {question}\n\n"
-                "Answer:"
-            ),
+            template="Policy:\n{context}\n\nQ: {question}\nA:",
         )
 
-        # TIME: LLM invocation (THE BOTTLENECK)
+        # LLM call
         llm_start = time.time()
         chain = prompt | llm | StrOutputParser()
         answer = chain.invoke({"context": context, "question": question})
@@ -122,13 +97,12 @@ def query_hr_documents(question: str, k: int = 3):
         
         total_time = time.time() - total_start
         
-        # Log performance breakdown
-        logger.info(f"⏱️ LLM generation: {llm_time:.2f}s 🐌 (Azure API)")
+        logger.info(f"⏱️ LLM: {llm_time:.2f}s")
         logger.info(f"⏱️ TOTAL: {total_time:.2f}s")
-        logger.info(f"Answer generated successfully (length: {len(answer)} chars)")
+        logger.info(f"   Breakdown: Embedding+Search={time.time()-total_start-llm_time:.2f}s + LLM={llm_time:.2f}s")
 
         return {"answer": answer}
     
     except Exception as e:
-        logger.error(f"Error in query_hr_documents: {e}", exc_info=True)
+        logger.error(f"Error: {e}", exc_info=True)
         raise
