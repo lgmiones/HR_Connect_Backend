@@ -1,6 +1,7 @@
 """
 LangGraph orchestrator - coordinates the overall workflow
 Single Responsibility: Only manages workflow logic
+OPTIMIZED: Clean logging, efficient state management
 """
 
 import logging
@@ -52,34 +53,27 @@ def should_continue(state: AgentState) -> str:
 
 def combine_results(state: AgentState) -> dict:
     """Combine all sub-query results into final answer"""
-
-    print("=" * 50)
-    print("COMBINE_RESULTS CALLED!")
-    print(f"State: {state}")
-    print("=" * 50)
     
     query_results = state.query_results or []
     sub_queries = state.sub_queries or []
     
+    # Build final answer
     if not query_results:
         final_answer = "I couldn't process your questions. Please try again."
     elif len(query_results) == 1:
         final_answer = query_results[0]
     else:
-        final_answer = "Here are the answers to your questions:\n\n" + "\n\n---\n\n".join(query_results)
+        # ✅ OPTIMIZATION: More concise formatting for multiple results
+        final_answer = "\n\n".join(query_results)
     
     # Determine query_type for metadata
     if sub_queries:
-        if len(sub_queries) == 1:
-            # Single query - use its type
-            query_type = sub_queries[0].query_type
-        else:
-            # Multiple queries - mark as compound
-            query_type = "compound"
+        query_type = "compound" if len(sub_queries) > 1 else sub_queries[0].query_type
     else:
         query_type = "general"
     
-    # Return ALL relevant state information
+    logger.info(f"✅ Combined {len(query_results)} results (type: {query_type})")
+    
     return {
         "messages": [{"role": "assistant", "content": final_answer}],
         "query_type": query_type,        
@@ -122,4 +116,4 @@ def create_agentic_orchestrator():
 
 # Create the compiled graph
 hr_agent_graph = create_agentic_orchestrator()
-logger.info("HR Agent Graph compiled successfully")
+logger.info("🚀 HR Agent Graph compiled successfully")
