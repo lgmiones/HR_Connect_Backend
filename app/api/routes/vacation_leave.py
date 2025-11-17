@@ -23,13 +23,14 @@ async def create_vacation_leave(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-     return post_leave(
-        db,
-        current_user.user_id,
-        request.used_days,
-        "vacation",
+    """Create a new vacation leave request"""
+    leave = LeaveService.post_vacation_leave(
+        db=db,
+        user_id=current_user.user_id,
+        used_days=request.used_days,
         reason=request.reason
     )
+    return leave
 
 @router.get("", response_model=VacationLeaveResponse)
 async def get_vacation_leave(
