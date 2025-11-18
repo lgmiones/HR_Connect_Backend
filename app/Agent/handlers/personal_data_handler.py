@@ -46,11 +46,13 @@ class PersonalDataQueryHandler(BaseQueryHandler):
         return any(keyword in question.lower() for keyword in keywords)
     
     def _get_leave_balance(self, question: str, user_id: int) -> str:
-        """Query database for all leave balances"""
+        """Query database for leave balances based on the question"""
         db = next(get_db())
-        
+        question_lower = question.lower()
+        lines = []
+
         try:
-            # Query all three leave types
+            # ✅ Always fetch all leave types
             vacation_result = db.execute(
                 text("SELECT total_days, used_days FROM vacation_leave WHERE user_id = :user_id"),
                 {"user_id": user_id}
@@ -65,32 +67,39 @@ class PersonalDataQueryHandler(BaseQueryHandler):
                 text("SELECT total_days, used_days FROM emergency_leave WHERE user_id = :user_id"),
                 {"user_id": user_id}
             ).fetchone()
+
+            # Then filter based on question
+            if "vacation" in question_lower and vacation_result:
+                remaining = vacation_result[0] - (vacation_result[1] or 0)
+                lines.append(f"🏖️ Vacation: {remaining}/{vacation_result[0]} days")
+
+            elif "sick" in question_lower and sick_result:
+                remaining = sick_result[0] - (sick_result[1] or 0)
+                lines.append(f"🏥 Sick: {remaining}/{sick_result[0]} days")
+
+            elif "emergency" in question_lower and emergency_result:
+                remaining = emergency_result[0] - (emergency_result[1] or 0)
+                lines.append(f"🚨 Emergency: {remaining}/{emergency_result[0]} days")
             
-            # Format concise response
-            lines = []
-            
-            # Vacation Leave
-            if vacation_result:
-                vacation_remaining = vacation_result[0] - (vacation_result[1] or 0)
-                lines.append(f"🏖️ Vacation: {vacation_remaining}/{vacation_result[0]} days")
-            
-            # Sick Leave
-            if sick_result:
-                sick_remaining = sick_result[0] - (sick_result[1] or 0)
-                lines.append(f"🏥 Sick: {sick_remaining}/{sick_result[0]} days")
-            
-            # Emergency Leave
-            if emergency_result:
-                emergency_remaining = emergency_result[0] - (emergency_result[1] or 0)
-                lines.append(f"🚨 Emergency: {emergency_remaining}/{emergency_result[0]} days")
-            
-            if lines:
-                return "**Your Leave Balance:**\n" + "\n".join(lines)
             else:
-                return "No leave balance records found for your account."
-                
+                # ✅ Show all leave types for general queries like "how many leaves"
+                if vacation_result:
+                    remaining = vacation_result[0] - (vacation_result[1] or 0)
+                    lines.append(f"🏖️ Vacation: {remaining}/{vacation_result[0]} days")
+                if sick_result:
+                    remaining = sick_result[0] - (sick_result[1] or 0)
+                    lines.append(f"🏥 Sick: {remaining}/{sick_result[0]} days")
+                if emergency_result:
+                    remaining = emergency_result[0] - (emergency_result[1] or 0)
+                    lines.append(f"🚨 Emergency: {remaining}/{emergency_result[0]} days")
+            
+            if not lines:
+                return f"**{question}**\n\nNo leave records found for your account."
+            
+            return "**Your Leave Balance:**\n" + "\n".join(lines)
+
         except Exception as e:
-            logger.error(f"Database error: {str(e)}")
-            return f"**{question}**\n\nSorry, I encountered a database error while retrieving your leave balance."
+            logger.error(f"Database error fetching leave balance: {e}")
+            return f"**{question}**\n\nSorry, I couldn't retrieve your leave balance. Please try again later."
         finally:
             db.close()
