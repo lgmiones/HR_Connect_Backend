@@ -1,14 +1,19 @@
 """
 HRConnect API - Main Application
 """
-
+ 
 from fastapi import FastAPI
 from app.api.routes import auth, chatbot
 from app.api.routes import emergency_leave, vacation_leave, sick_leave
 import logging
 import sys
 from app.services.retriever import prefetch_common_queries
+ 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+ 
+ 
 # ✅ Configure logging BEFORE anything else
 logging.basicConfig(
     level=logging.INFO,
@@ -17,9 +22,9 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
-
+ 
 logger = logging.getLogger(__name__)
-
+ 
 app = FastAPI(
     title="HRConnect API",
     description="Human Resource Information System with Agentic RAG",
@@ -28,41 +33,55 @@ app = FastAPI(
         "persistAuthorization": True
     }
 )
-
+ 
+origins = [
+    "http://localhost:3000",  # your frontend
+    "http://127.0.0.1:8000",  # optional
+]
+ 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,       # allow frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],         # allow GET, POST, etc.
+    allow_headers=["*"],         # allow all headers
+)
+ 
+ 
 # Include routers
 app.include_router(auth.router)
 app.include_router(chatbot.router)
 app.include_router(emergency_leave.router)
 app.include_router(vacation_leave.router)
 app.include_router(sick_leave.router)
-
-
+ 
+ 
 @app.on_event("startup")
 async def startup_event():
     """Warm up models on server startup"""
     logger.info("🚀 Starting server warmup...")
-    
+   
     try:
         # Preload vectorstore and embeddings
         from app.services.vectorstore import get_vectorstore
         logger.info("Loading vectorstore...")
         get_vectorstore()
         logger.info("✅ Vectorstore preloaded")
-        
+       
         # Preload LLM
         from app.Agent.utils.llm_config import get_llm
         logger.info("Loading LLM...")
         get_llm()
         logger.info("✅ LLM preloaded")
-        
+
         import threading
         threading.Thread(target=prefetch_common_queries, daemon=True).start()
         
         logger.info("🎉 Server warmup complete!")
     except Exception as e:
         logger.error(f"❌ Warmup failed: {e}", exc_info=True)
-
-
+ 
+ 
 @app.get("/")
 def root():
     return {
@@ -76,8 +95,8 @@ def root():
             "Employee Data Access"
         ]
     }
-
-
+ 
+ 
 @app.get("/health")
 def health_check():
     """Global health check endpoint for monitoring"""
