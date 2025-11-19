@@ -7,6 +7,7 @@ from app.api.routes import auth, chatbot
 from app.api.routes import emergency_leave, vacation_leave, sick_leave
 import logging
 import sys
+from app.services.retriever import prefetch_common_queries
 
 # ✅ Configure logging BEFORE anything else
 logging.basicConfig(
@@ -43,7 +44,7 @@ async def startup_event():
     
     try:
         # Preload vectorstore and embeddings
-        from app.services.retriever import get_vectorstore
+        from app.services.vectorstore import get_vectorstore
         logger.info("Loading vectorstore...")
         get_vectorstore()
         logger.info("✅ Vectorstore preloaded")
@@ -53,6 +54,9 @@ async def startup_event():
         logger.info("Loading LLM...")
         get_llm()
         logger.info("✅ LLM preloaded")
+        
+        import threading
+        threading.Thread(target=prefetch_common_queries, daemon=True).start()
         
         logger.info("🎉 Server warmup complete!")
     except Exception as e:
