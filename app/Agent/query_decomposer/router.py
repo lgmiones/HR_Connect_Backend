@@ -36,7 +36,7 @@ def quick_route(question: str) -> str:
     return "general"
 
 
-def _is_personal_data_query(question_lower: str) -> bool:
+# def _is_personal_data_query(question_lower: str) -> bool:
     """
     Check if query is about personal data
     
@@ -82,7 +82,71 @@ def _is_personal_data_query(question_lower: str) -> bool:
     has_personal_topic = any(topic in question_lower for topic in personal_topics)
     
     return has_personal_keyword and has_personal_topic
-
+def _is_personal_data_query(question_lower: str) -> bool:
+    """
+    Check if query is about personal data
+    
+    Enhanced to catch implicit personal queries about leave history/records
+    """
+    
+    # Explicit personal keywords
+    explicit_personal_keywords = [
+        "my", "me",
+        "i have", "i am", "do i", "can i",
+        "i took", "i used", "i applied", "i requested",
+        "did i take", "did i use", "did i apply", "did i request",
+        "have i taken", "have i used",
+        "what did i", "when did i", "how many did i",
+        "show me my", "tell me my"
+    ]
+    
+    # Personal data topics
+    personal_topics = [
+        "balance", "remaining", "left", "available",
+        "history", "past", "previous", "recent", "last",
+        "took", "used", "taken", "applied", "requested",
+        "last month", "last week", "this year", "recently",
+        "this month", "this week",
+        "salary", "attendance", "days", "record", "records"
+    ]
+    
+    # ✅ NEW: Implicit personal query patterns
+    # Questions about leave events/records without explicit "my"
+    implicit_personal_patterns = [
+        # Asking about specific dates/periods
+        r'what.*leave.*on \d{1,2}[/-]\d{1,2}[/-]\d{2,4}',  # "what leaves on 11/17/2025"
+        r'what.*leave.*in (january|february|march|april|may|june|july|august|september|october|november|december)',
+        r'what.*leave.*happened',
+        r'what kind of.*leave',
+        r'which.*leave.*took',
+        
+        # Questions about leave records
+        r'show.*leave.*history',
+        r'list.*leave',
+        r'display.*leave',
+        
+        # Questions about specific counts/totals for the user
+        r'how many.*leave.*took',
+        r'total.*leave.*used',
+    ]
+    
+    # Check explicit personal keywords
+    has_explicit_personal = any(kw in question_lower for kw in explicit_personal_keywords)
+    
+    # Check personal topics
+    has_personal_topic = any(topic in question_lower for topic in personal_topics)
+    
+    # ✅ Check implicit personal patterns
+    import re
+    has_implicit_personal = any(
+        re.search(pattern, question_lower) 
+        for pattern in implicit_personal_patterns
+    )
+    
+    # Match if:
+    # 1. Has explicit personal keyword AND topic, OR
+    # 2. Has implicit personal pattern
+    return (has_explicit_personal and has_personal_topic) or has_implicit_personal
 
 def _is_general_query(question_lower: str) -> bool:
     """Check if query is a general greeting or system question"""

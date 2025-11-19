@@ -41,19 +41,50 @@ def is_leave_balance_query(question_lower: str) -> bool:
     return any(keyword in question_lower for keyword in balance_keywords)
 
 
+# def is_leave_history_query(question_lower: str) -> bool:
+#     """
+#     Check if question is about leave history/requests
+    
+#     Keywords: history, past, took, used, applied
+#     """
+#     history_keywords = [
+#         'history', 'past', 'previous', 'last', 'recent',
+#         'took', 'taken', 'used', 'applied', 'requested',
+#         'when did i', 'what leaves', 'my requests', 'did i take'
+#     ]
+#     return any(keyword in question_lower for keyword in history_keywords)
+
+# app/Agent/handlers/personal_data/intent_detector.py
+
 def is_leave_history_query(question_lower: str) -> bool:
     """
     Check if question is about leave history/requests
     
-    Keywords: history, past, took, used, applied
+    Enhanced to catch date-specific queries
     """
     history_keywords = [
-        'history', 'past', 'previous', 'last', 'recent',
+        # Explicit history keywords
+        'history', 'past', 'previous', 'recent',
         'took', 'taken', 'used', 'applied', 'requested',
-        'when did i', 'what leaves', 'my requests', 'did i take'
+        'when did i', 'what leaves', 'my requests', 'did i take',
+        
+        # ✅ NEW: Event-based queries
+        'happened', 'occurred', 'what kind of',
+        'which leaves', 'show leaves', 'list leaves',
+        
+        # ✅ NEW: Date-specific patterns
+        'on ', 'in ', 'during ', 'at ',  # "on 11/17/2025"
+        'last', 'this', 'that'            # "last month", "this week"
     ]
+    
+    # ✅ Special case: Questions with dates are almost always history queries
+    import re
+    has_date = re.search(r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', question_lower)
+    
+    if has_date and 'leave' in question_lower:
+        return True
+    
     return any(keyword in question_lower for keyword in history_keywords)
-
 
 def detect_leave_type(question: str) -> dict:
     """
