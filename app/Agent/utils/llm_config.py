@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 _llm_cache = {}
 
 
-def get_llm(temperature: float = 1.0):
+def get_llm(temperature: float = 1.0):  # ✅ Back to 1.0 (model requirement)
     """
     Get configured LLM instance with fallback (SINGLETON PATTERN)
     
@@ -47,8 +47,8 @@ def get_llm(temperature: float = 1.0):
                 api_key=settings.AZURE_OPENAI_API_KEY,
                 api_version=settings.AZURE_OPENAI_API_VERSION,
                 temperature=temperature,
-                timeout=30,        # Fail fast if Azure is slow
-                max_retries=1      # Don't waste time retrying
+                timeout=30,
+                max_retries=1
             )
             # Cache the instance
             _llm_cache[cache_key] = llm_instance
@@ -74,5 +74,5 @@ def get_llm(temperature: float = 1.0):
 
 
 # Default LLM instance (created once, reused everywhere)
-llm = get_llm()
+llm = get_llm()  # ✅ Use default temperature=1.0
 logger.info("🚀 Default LLM initialized")

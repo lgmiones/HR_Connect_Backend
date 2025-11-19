@@ -30,8 +30,9 @@ class PolicyQueryHandler(BaseQueryHandler):
         logger.info(f"Handling policy query: {question}")
         
         try:
+            # ✅ Still calls the same function - but internally uses LCEL now!
             rag_result = query_hr_documents(question)
             return f"**{question}**\n\n{rag_result['answer']}"
         except Exception as e:
-            logger.error(f"Error in policy query: {str(e)}")
+            logger.error(f"Error in policy query: {str(e)}", exc_info=True)
             return f"**{question}**\n\nSorry, I encountered an error retrieving policy information."
