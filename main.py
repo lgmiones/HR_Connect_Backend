@@ -8,8 +8,6 @@ from app.api.routes import emergency_leave, vacation_leave, sick_leave
 import logging
 import sys
 from app.services.retriever import prefetch_common_queries
- 
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
  
@@ -74,8 +72,8 @@ async def startup_event():
         get_llm()
         logger.info("✅ LLM preloaded")
 
-        import threading
-        threading.Thread(target=prefetch_common_queries, daemon=True).start()
+        # import threading
+        # threading.Thread(target=prefetch_common_queries, daemon=True).start()
         
         logger.info("🎉 Server warmup complete!")
     except Exception as e:

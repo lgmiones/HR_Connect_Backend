@@ -36,52 +36,53 @@ def quick_route(question: str) -> str:
     return "general"
 
 
-# def _is_personal_data_query(question_lower: str) -> bool:
-    """
-    Check if query is about personal data
+# # def _is_personal_data_query(question_lower: str) -> bool:
+#     """
+#     Check if query is about personal data
     
-    Requires BOTH personal keyword AND personal topic
-    Enhanced with past tense verbs and time references
-    """
-    # Personal indicators (I/my + actions)
-    personal_keywords = [
-        # Possessives
-        "my", "me",
+#     Requires BOTH personal keyword AND personal topic
+#     Enhanced with past tense verbs and time references
+#     """
+#     # Personal indicators (I/my + actions)
+#     personal_keywords = [
+#         # Possessives
+#         "my", "me",
         
-        # Present tense
-        "i have", "i am", "do i", "can i",
+#         # Present tense
+#         "i have", "i am", "do i", "can i",
         
-        # Past tense
-        "i took", "i used", "i applied", "i requested",
-        "did i take", "did i use", "did i apply", "did i request",
-        "have i taken", "have i used",
+#         # Past tense
+#         "i took", "i used", "i applied", "i requested",
+#         "did i take", "did i use", "did i apply", "did i request",
+#         "have i taken", "have i used",
         
-        # Question starters about self
-        "what did i", "when did i", "how many did i",
-        "show me my", "tell me my"
-    ]
+#         # Question starters about self
+#         "what did i", "when did i", "how many did i",
+#         "show me my", "tell me my"
+#     ]
     
-    # Personal data topics
-    personal_topics = [
-        # Balance-related
-        "balance", "remaining", "left", "available",
+#     # Personal data topics
+#     personal_topics = [
+#         # Balance-related
+#         "balance", "remaining", "left", "available",
         
-        # History-related
-        "history", "past", "previous", "recent", "last",
-        "took", "used", "taken", "applied", "requested",
+#         # History-related
+#         "history", "past", "previous", "recent", "last",
+#         "took", "used", "taken", "applied", "requested",
         
-        # Time-related personal queries
-        "last month", "last week", "this year", "recently",
-        "this month", "this week",
+#         # Time-related personal queries
+#         "last month", "last week", "this year", "recently",
+#         "this month", "this week",
         
-        # Other personal data
-        "salary", "attendance", "days", "record", "records"
-    ]
+#         # Other personal data
+#         "salary", "attendance", "days", "record", "records"
+#     ]
     
-    has_personal_keyword = any(kw in question_lower for kw in personal_keywords)
-    has_personal_topic = any(topic in question_lower for topic in personal_topics)
+#     has_personal_keyword = any(kw in question_lower for kw in personal_keywords)
+#     has_personal_topic = any(topic in question_lower for topic in personal_topics)
     
-    return has_personal_keyword and has_personal_topic
+#     return has_personal_keyword and has_personal_topic
+
 def _is_personal_data_query(question_lower: str) -> bool:
     """
     Check if query is about personal data

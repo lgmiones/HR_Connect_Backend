@@ -36,16 +36,7 @@ def generate_llm_response(question: str, intent: str) -> str:
 
 
 def _build_prompt(question: str, intent: str) -> str:
-    """
-    Build appropriate prompt based on intent
-    
-    Args:
-        question: User's question
-        intent: Detected intent
-        
-    Returns:
-        System prompt for LLM
-    """
+    """Build appropriate prompt based on intent"""
     
     # Base system context
     system_context = """You are the HRConnect chatbot assistant, helping employees with HR-related queries.
@@ -78,6 +69,8 @@ Instructions:
 - Give 2-3 specific examples of questions they can ask
 - Be friendly and encouraging
 - Keep it under 100 words
+- DO NOT ask follow-up questions
+- End naturally after explaining capabilities
 """,
         'about': """
 The user is asking about HRConnect or who/what you are.
@@ -88,6 +81,8 @@ Instructions:
 - Mention 2-3 key benefits or features
 - Keep it conversational and welcoming
 - Keep it under 80 words
+- DO NOT ask follow-up questions
+- End naturally after explaining
 """,
         'features': """
 The user is asking about features or functionality.
@@ -98,25 +93,29 @@ Instructions:
 - Use bullet points for clarity
 - Be concise but informative
 - Keep it under 100 words
+- DO NOT ask follow-up questions
+- End naturally after listing features
 """,
         'greeting': """
 The user is greeting you.
 
 Instructions:
 - Respond warmly and briefly
-- Offer help
+- Offer help in a single sentence
 - Keep it very short (20-30 words)
-- Don't list all capabilities unless asked
+- DO NOT ask questions
+- Just greet and state availability
 """,
         'other': """
 The user has a general question about HR or the system.
 
 Instructions:
 - Answer naturally and conversationally
-- If you're not sure, politely redirect to specific capabilities
-- Suggest they ask about policies or personal data if unclear
-- Be helpful and friendly
+- Provide complete, helpful information
+- Be friendly but professional
 - Keep it under 80 words
+- DO NOT ask follow-up questions
+- End naturally after answering
 """
     }
     
@@ -128,8 +127,7 @@ Instructions:
 
 User's Question: {question}
 
-Your Response:"""
-
+Your response:"""
 
 def should_use_llm(intent: str) -> bool:
     """

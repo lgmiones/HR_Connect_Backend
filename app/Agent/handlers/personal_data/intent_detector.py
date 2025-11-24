@@ -1,9 +1,10 @@
 """
 Intent detection for personal data queries
-Determines if user wants balance, history, or other info
+Enhanced keyword-based detection with comprehensive patterns
 """
 
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +19,21 @@ def detect_intent(question: str) -> str:
     Returns:
         str: 'balance', 'history', or 'unknown'
     """
-    question_lower = question.lower()
+    question_lower = question.lower().strip()
     
+    # Check balance first (more specific patterns)
     if is_leave_balance_query(question_lower):
+        logger.info("Intent: balance")
         return 'balance'
-    elif is_leave_history_query(question_lower):
+    
+    # Check history (broader patterns)
+    if is_leave_history_query(question_lower):
+        logger.info("Intent: history")
         return 'history'
-    else:
-        return 'unknown'
+    
+    # Unknown
+    logger.info("Intent: unknown")
+    return 'unknown'
 
 
 def is_leave_balance_query(question_lower: str) -> bool:
@@ -36,55 +44,58 @@ def is_leave_balance_query(question_lower: str) -> bool:
     """
     balance_keywords = [
         'balance', 'remaining', 'left', 'how many', 'how much',
-        'available', 'do i have', 'days left', 'have left'
+        'available', 'do i have', 'days left', 'have left',
+        'still have', 'can i use', 'can i take'
     ]
     return any(keyword in question_lower for keyword in balance_keywords)
 
 
-# def is_leave_history_query(question_lower: str) -> bool:
-#     """
-#     Check if question is about leave history/requests
-    
-#     Keywords: history, past, took, used, applied
-#     """
-#     history_keywords = [
-#         'history', 'past', 'previous', 'last', 'recent',
-#         'took', 'taken', 'used', 'applied', 'requested',
-#         'when did i', 'what leaves', 'my requests', 'did i take'
-#     ]
-#     return any(keyword in question_lower for keyword in history_keywords)
-
-# app/Agent/handlers/personal_data/intent_detector.py
-
 def is_leave_history_query(question_lower: str) -> bool:
     """
     Check if question is about leave history/requests
-    
-    Enhanced to catch date-specific queries
+    Comprehensive pattern matching for various phrasings
     """
-    history_keywords = [
-        # Explicit history keywords
-        'history', 'past', 'previous', 'recent',
-        'took', 'taken', 'used', 'applied', 'requested',
-        'when did i', 'what leaves', 'my requests', 'did i take',
-        
-        # ✅ NEW: Event-based queries
-        'happened', 'occurred', 'what kind of',
-        'which leaves', 'show leaves', 'list leaves',
-        
-        # ✅ NEW: Date-specific patterns
-        'on ', 'in ', 'during ', 'at ',  # "on 11/17/2025"
-        'last', 'this', 'that'            # "last month", "this week"
+    # Definite history keywords (high confidence)
+    definite_keywords = [
+        'history', 'past', 'previous', 'took', 'taken', 'used',
+        'entries', 'records', 'requests', 'applied', 'requested'
     ]
     
-    # ✅ Special case: Questions with dates are almost always history queries
-    import re
-    has_date = re.search(r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', question_lower)
-    
-    if has_date and 'leave' in question_lower:
+    if any(keyword in question_lower for keyword in definite_keywords):
         return True
     
-    return any(keyword in question_lower for keyword in history_keywords)
+    # Action verbs indicating retrieval
+    action_verbs = ['give', 'show', 'display', 'list', 'get', 'fetch', 
+                    'pull', 'see', 'view', 'check', 'find', 'tell']
+    
+    has_action = any(f"{verb} " in question_lower or f"{verb} me" in question_lower 
+                     for verb in action_verbs)
+    
+    # Leave context
+    has_leave_context = any(word in question_lower for word in 
+                           ['leave', 'vacation', 'sick', 'emergency', 'vl', 'sl', 'el'])
+    
+    # Action verb + leave context = history query
+    if has_action and has_leave_context:
+        return True
+    
+    # Time references indicate history
+    time_refs = ['when', 'last', 'recent', 'this month', 'last month',
+                 'this year', 'last year', 'on ', 'in ', 'during']
+    
+    has_time = any(ref in question_lower for ref in time_refs)
+    
+    if has_time and has_leave_context:
+        return True
+    
+    # Date patterns (11/17/2025, 2024-11-17, etc.)
+    has_date = re.search(r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', question_lower)
+    
+    if has_date and has_leave_context:
+        return True
+    
+    return False
+
 
 def detect_leave_type(question: str) -> dict:
     """
@@ -98,13 +109,16 @@ def detect_leave_type(question: str) -> dict:
     """
     question_lower = question.lower()
     
-    vacation = "vacation" in question_lower
-    sick = "sick" in question_lower
-    emergency = "emergency" in question_lower
+    # Explicit leave type mentions (including abbreviations)
+    vacation = 'vacation' in question_lower or 'vl' in question_lower
+    sick = 'sick' in question_lower or 'sl' in question_lower
+    emergency = 'emergency' in question_lower or 'el' in question_lower
     
-    # If no specific type mentioned, query all
+    # If no specific type mentioned, query all types
     if not (vacation or sick or emergency):
         vacation = sick = emergency = True
+    
+    logger.info(f"Leave types: vacation={vacation}, sick={sick}, emergency={emergency}")
     
     return {
         'vacation': vacation,
