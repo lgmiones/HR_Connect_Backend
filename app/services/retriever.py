@@ -56,7 +56,6 @@ def query_hr_documents(question: str, k: int = 2, use_cache: bool = True):
     try:
         logger.info(f"🔍 RAG query: {question}")
         
-        # Use LCEL chain
         answer = rag_chain.invoke({"question": question, "k": k})
         
         total_time = time.time() - total_start

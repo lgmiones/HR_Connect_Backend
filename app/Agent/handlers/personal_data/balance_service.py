@@ -33,22 +33,22 @@ def get_leave_balance(question: str, user_id: int) -> str:
 
         # Filter based on question
         if "vacation" in question_lower and vacation_result:
-            lines.append(_format_balance_line("Vacation", "🏖️", vacation_result))
+            lines.append(_format_balance_line("Vacation", "", vacation_result))
 
         elif "sick" in question_lower and sick_result:
-            lines.append(_format_balance_line("Sick", "🏥", sick_result))
+            lines.append(_format_balance_line("Sick", "", sick_result))
 
         elif "emergency" in question_lower and emergency_result:
-            lines.append(_format_balance_line("Emergency", "🚨", emergency_result))
+            lines.append(_format_balance_line("Emergency", "", emergency_result))
         
         else:
             # Show all leave types for general queries
             if vacation_result:
-                lines.append(_format_balance_line("Vacation", "🏖️", vacation_result))
+                lines.append(_format_balance_line("Vacation", "", vacation_result))
             if sick_result:
-                lines.append(_format_balance_line("Sick", "🏥", sick_result))
+                lines.append(_format_balance_line("Sick", "", sick_result))
             if emergency_result:
-                lines.append(_format_balance_line("Emergency", "🚨", emergency_result))
+                lines.append(_format_balance_line("Emergency", "", emergency_result))
         
         if not lines:
             return f"**{question}**\n\nNo leave records found for your account."

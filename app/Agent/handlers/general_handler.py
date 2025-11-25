@@ -1,89 +1,80 @@
 """
 General query handler - Single Responsibility Principle
-Handles general questions about the system
+Handles general questions about the system with LLM-generated responses
 """
 
 import logging
 from app.Agent.handlers.base_handler import BaseQueryHandler
+from app.Agent.handlers.general import (
+    detect_general_intent,
+    generate_llm_response,
+    should_use_llm,
+    get_help_template,
+    get_about_template,
+    get_features_template,
+    get_greeting_template,
+    get_default_template
+)
 
 logger = logging.getLogger(__name__)
 
 
 class GeneralQueryHandler(BaseQueryHandler):
-    """Handles general questions about HRConnect"""
+    """
+    Handles general questions about HRConnect
+    
+    Uses LLM for natural responses with template fallbacks
+    """
     
     def can_handle(self, query_type: str) -> bool:
         return query_type == "general"
     
     def handle(self, question: str, user_id: int | None = None) -> str:
         """
-        Handle general questions
+        Handle general questions with LLM-generated responses
         
         Args:
             question: General question about the system
             user_id: Not typically used for general queries
             
         Returns:
-            General information about HRConnect
+            Natural language response about HRConnect
         """
         logger.info(f"Handling general query: {question}")
         
-        question_lower = question.lower()
+        # Detect intent
+        intent = detect_general_intent(question)
+        logger.info(f"Detected intent: {intent}")
         
-        # Pre-defined responses for common questions
-        if "what can you do" in question_lower or "help" in question_lower:
-            return self._get_help_response(question)
-        elif "hrconnect" in question_lower or "what is this" in question_lower:
-            return self._get_about_response(question)
-        elif "feature" in question_lower:
-            return self._get_features_response(question)
+        # Use LLM for natural responses
+        if should_use_llm(intent):
+            try:
+                return generate_llm_response(question, intent)
+            except Exception as e:
+                logger.error(f"LLM response failed, using template fallback: {e}")
+                return self._get_template_response(question, intent)
         else:
-            return f"**{question}**\n\nI'm here to help with HR policies and your personal HR data. What would you like to know?"
+            # Use pre-defined templates (faster)
+            return self._get_template_response(question, intent)
     
-    @staticmethod
-    def _get_help_response(question: str) -> str:
-        return f"""**{question}**
-
-I'm your HRConnect assistant! I can help you with:
-
-🔍 **Policy Information**: Answer questions about company policies, guidelines, and procedures
-📊 **Personal Data**: Check your leave balances, attendance records, and leave request status
-❓ **General Help**: Answer HR-related questions
-
-Try asking me:
-- "What's the leave policy?" (I'll check our policy documents)
-- "How many vacation days do I have?" (I'll check your personal data)
-- "Show my attendance this week" (I'll get your records)"""
-    
-    @staticmethod
-    def _get_about_response(question: str) -> str:
-        return f"""**{question}**
-
-HRConnect is our Human Resource Information System that helps streamline HR processes including:
-
-- Attendance tracking and time modification
-- Leave management (file, view, and cancel requests)  
-- Access to company policies and procedures
-- Employee self-service portal
-
-I'm the chatbot assistant integrated with HRConnect to help you access information quickly!"""
-    
-    @staticmethod
-    def _get_features_response(question: str) -> str:
-        return f"""**{question}**
-
-Available HRConnect Features:
-
-For Employees:
-✅ File modification requests
-✅ Submit leave requests  
-✅ Check remaining leave balance
-✅ Ask about HR policies
-✅ View attendance records
-
-For HR:
-✅ Review/approve/reject requests
-✅ Monitor employee attendance
-✅ Dashboard analytics
-
-You can access these through the HRConnect system or ask me for help!"""
+    def _get_template_response(self, question: str, intent: str) -> str:
+        """
+        Get template-based response as fallback
+        
+        Args:
+            question: User's question
+            intent: Detected intent
+            
+        Returns:
+            Pre-defined template response
+        """
+        template_map = {
+            'help': get_help_template,
+            'about': get_about_template,
+            'features': get_features_template,
+            'greeting': get_greeting_template,
+            'other': get_default_template
+        }
+        
+        template_func = template_map.get(intent, get_default_template)
+        return template_func(question)

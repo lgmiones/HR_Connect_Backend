@@ -75,8 +75,14 @@ class PersonalDataQueryHandler(BaseQueryHandler):
             return f"**{question}**\n\nYou don't have any leave request history yet."
         
         # Generate natural language response with LLM
-        return generate_history_response(question, history_data)
-    
+        response = generate_history_response(question, history_data)
+        
+        # ✅ ADD THIS DEBUG LINE
+        logger.info(f"🔍 Handler returning response of length: {len(response)} chars")
+        logger.debug(f"🔍 Response preview: {response[:200]}...")
+        
+        return response
+        
     def _handle_unknown_query(self, question: str) -> str:
         """Handle queries with unclear intent"""
         return (

@@ -19,7 +19,13 @@ logger = logging.getLogger(__name__)
 rag_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are an HR assistant. Answer based on the policy documents provided.
 
-IMPORTANT: Be CONCISE. Use bullet points. Keep it short."""),
+IMPORTANT: 
+- Be CONCISE and DIRECT
+- Use bullet points when appropriate
+- Answer the question completely
+- DO NOT ask follow-up questions
+- DO NOT suggest additional queries
+- End your response naturally after answering"""),
     ("user", "Policy:\n{context}\n\nQ: {question}\nA:")
 ])
 
@@ -29,16 +35,19 @@ compound_policy_prompt = ChatPromptTemplate.from_messages([
 
 IMPORTANT: Be CONCISE and DIRECT.
 - Use bullet points
-- Avoid repeating information
+- Answer each question completely
 - Maximum 5 bullet points per question
-- Keep answers short and actionable"""),
+- Keep answers short and actionable
+- DO NOT ask follow-up questions
+- DO NOT suggest additional actions
+- End naturally after answering all questions"""),
     ("user", """Policy Documents:
 {context}
 
 Questions:
 {questions}
 
-Provide SHORT, clear answers for each question.""")
+Provide complete, clear answers for each question.""")
 ])
 
 
