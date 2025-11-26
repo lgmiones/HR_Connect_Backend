@@ -30,6 +30,14 @@ class LeaveService:
     def post_vacation_leave(db: Session, user_id: int, used_days: int, reason: str) -> VacationLeave:
         
         leave = LeaveService.get_or_create_vacation_leave(db, user_id)
+        
+        # Validate sufficient balance
+        remaining_balance = leave.total_days - leave.used_days
+        if remaining_balance == 0:
+            raise ValueError("You have zero remaining vacation leave balance")
+        if used_days > remaining_balance:
+            raise ValueError(f"Insufficient vacation leave balance. You have {remaining_balance} day(s) remaining")
+        
         leave.used_days += used_days
         db.commit()
         db.refresh(leave)
@@ -65,6 +73,14 @@ class LeaveService:
     def post_sick_leave(db: Session, user_id: int, used_days: int, reason: str) -> SickLeave:
         
         leave = LeaveService.get_or_create_sick_leave(db, user_id)
+        
+        # Validate sufficient balance
+        remaining_balance = leave.total_days - leave.used_days
+        if remaining_balance == 0:
+            raise ValueError("You have zero remaining sick leave balance")
+        if used_days > remaining_balance:
+            raise ValueError(f"Insufficient sick leave balance. You have {remaining_balance} day(s) remaining")
+        
         leave.used_days += used_days
         db.commit()
         db.refresh(leave)
@@ -100,6 +116,14 @@ class LeaveService:
     def post_emergency_leave(db: Session, user_id: int, used_days: int, reason: str) -> EmergencyLeave:
         
         leave = LeaveService.get_or_create_emergency_leave(db, user_id)
+        
+        # Validate sufficient balance
+        remaining_balance = leave.total_days - leave.used_days
+        if remaining_balance == 0:
+            raise ValueError("You have zero remaining emergency leave balance")
+        if used_days > remaining_balance:
+            raise ValueError(f"Insufficient emergency leave balance. You have {remaining_balance} day(s) remaining")
+        
         leave.used_days += used_days
         db.commit()
         db.refresh(leave)
@@ -191,8 +215,12 @@ class LeaveService:
         """
         Deduct used_days from total_days and update the leave record
         """
-        if used_days + leave.used_days > leave.total_days:
-            raise ValueError("Used days cannot exceed total days")
+        remaining_balance = leave.total_days - leave.used_days
+        
+        if remaining_balance == 0:
+            raise ValueError("You have zero remaining leave balance")
+        if used_days > remaining_balance:
+            raise ValueError(f"Insufficient leave balance. You have {remaining_balance} day(s) remaining")
 
         leave.used_days += used_days
         leave.last_updated = date.today()
