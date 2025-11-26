@@ -14,10 +14,13 @@ security = HTTPBearer()
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Security(security),  # ← Changed
+    credentials: HTTPAuthorizationCredentials = Security(security),
     db: Session = Depends(get_db)
 ) -> User:
-    """Get current authenticated user from JWT token"""
+    """
+    Get current authenticated user from JWT token
+    Also verifies this token is the current active session
+    """
     token = credentials.credentials  # Extract the token
     
     payload = verify_token(token)
@@ -25,6 +28,15 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    # Extract JTI from token payload
+    token_jti = payload.get("jti")
+    if not token_jti:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token format",
             headers={"WWW-Authenticate": "Bearer"}
         )
     
@@ -37,4 +49,13 @@ def get_current_user(
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"}
         )
+    
+    # CRITICAL CHECK: Verify this token is the current active session
+    if user.current_token_jti != token_jti:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session has been invalidated. Please login again.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
     return user

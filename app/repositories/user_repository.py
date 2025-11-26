@@ -4,6 +4,7 @@ Handles all database operations related to User model
 """
 
 from typing import Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.repositories.base_repository import BaseRepository
@@ -29,3 +30,24 @@ class UserRepository(BaseRepository[User]):
             "email": email,
             "hashed_password": hashed_password
         })
+    
+    def update_active_token(self, user_id: int, jti: str, expires_at: datetime) -> None:
+        """
+        Update user's current active token JTI with expiration
+        This invalidates any previous session tokens
+        """
+        user = self.get_by_id(user_id)
+        if user:
+            user.current_token_jti = jti
+            user.token_expires_at = expires_at
+            self.db.commit()
+    
+    def clear_active_token(self, user_id: int) -> None:
+        """
+        Clear user's active token on logout
+        """
+        user = self.get_by_id(user_id)
+        if user:
+            user.current_token_jti = None
+            user.token_expires_at = None
+            self.db.commit()

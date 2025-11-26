@@ -1,8 +1,8 @@
-"""updated tables
+"""updated user model
 
-Revision ID: cfb111ca85ed
+Revision ID: e3a93949e0db
 Revises: 
-Create Date: 2025-11-17 09:47:59.202354
+Create Date: 2025-11-26 09:47:17.297655
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'cfb111ca85ed'
+revision: str = 'e3a93949e0db'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,6 +25,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=100), nullable=True),
     sa.Column('hashed_password', sa.String(length=255), nullable=True),
+    sa.Column('current_token_jti', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.PrimaryKeyConstraint('user_id')
     )
@@ -50,10 +51,20 @@ def upgrade() -> None:
     sa.Column('last_updated', sa.Date(), server_default=sa.text('GETDATE()'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('emergency_id'),
+    sa.UniqueConstraint('user_id'),
     sa.UniqueConstraint('user_id', name='uq_emergency_user_id')
     )
     op.create_index(op.f('ix_emergency_leave_emergency_id'), 'emergency_leave', ['emergency_id'], unique=False)
-    op.create_index(op.f('ix_emergency_leave_user_id'), 'emergency_leave', ['user_id'], unique=True)
+    op.create_table('emergency_leave_requests',
+    sa.Column('request_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('used_days', sa.Integer(), nullable=False),
+    sa.Column('reason', sa.String(length=255), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
+    sa.PrimaryKeyConstraint('request_id')
+    )
+    op.create_index(op.f('ix_emergency_leave_requests_request_id'), 'emergency_leave_requests', ['request_id'], unique=False)
     op.create_table('sick_leave',
     sa.Column('sick_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -62,10 +73,20 @@ def upgrade() -> None:
     sa.Column('last_updated', sa.Date(), server_default=sa.text('GETDATE()'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('sick_id'),
+    sa.UniqueConstraint('user_id'),
     sa.UniqueConstraint('user_id', name='uq_sick_user_id')
     )
     op.create_index(op.f('ix_sick_leave_sick_id'), 'sick_leave', ['sick_id'], unique=False)
-    op.create_index(op.f('ix_sick_leave_user_id'), 'sick_leave', ['user_id'], unique=True)
+    op.create_table('sick_leave_requests',
+    sa.Column('request_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('used_days', sa.Integer(), nullable=False),
+    sa.Column('reason', sa.String(length=255), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
+    sa.PrimaryKeyConstraint('request_id')
+    )
+    op.create_index(op.f('ix_sick_leave_requests_request_id'), 'sick_leave_requests', ['request_id'], unique=False)
     op.create_table('vacation_leave',
     sa.Column('vacation_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -74,10 +95,20 @@ def upgrade() -> None:
     sa.Column('last_updated', sa.Date(), server_default=sa.text('GETDATE()'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
     sa.PrimaryKeyConstraint('vacation_id'),
+    sa.UniqueConstraint('user_id'),
     sa.UniqueConstraint('user_id', name='uq_vacation_user_id')
     )
-    op.create_index(op.f('ix_vacation_leave_user_id'), 'vacation_leave', ['user_id'], unique=True)
     op.create_index(op.f('ix_vacation_leave_vacation_id'), 'vacation_leave', ['vacation_id'], unique=False)
+    op.create_table('vacation_leave_requests',
+    sa.Column('request_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('used_days', sa.Integer(), nullable=False),
+    sa.Column('reason', sa.String(length=255), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ),
+    sa.PrimaryKeyConstraint('request_id')
+    )
+    op.create_index(op.f('ix_vacation_leave_requests_request_id'), 'vacation_leave_requests', ['request_id'], unique=False)
     op.create_table('messages',
     sa.Column('message_id', sa.Integer(), sa.Identity(always=False, start=1, increment=1), nullable=False),
     sa.Column('conversation_id', sa.Integer(), nullable=False),
@@ -99,13 +130,16 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_messages_created_at'), table_name='messages')
     op.drop_index(op.f('ix_messages_conversation_id'), table_name='messages')
     op.drop_table('messages')
+    op.drop_index(op.f('ix_vacation_leave_requests_request_id'), table_name='vacation_leave_requests')
+    op.drop_table('vacation_leave_requests')
     op.drop_index(op.f('ix_vacation_leave_vacation_id'), table_name='vacation_leave')
-    op.drop_index(op.f('ix_vacation_leave_user_id'), table_name='vacation_leave')
     op.drop_table('vacation_leave')
-    op.drop_index(op.f('ix_sick_leave_user_id'), table_name='sick_leave')
+    op.drop_index(op.f('ix_sick_leave_requests_request_id'), table_name='sick_leave_requests')
+    op.drop_table('sick_leave_requests')
     op.drop_index(op.f('ix_sick_leave_sick_id'), table_name='sick_leave')
     op.drop_table('sick_leave')
-    op.drop_index(op.f('ix_emergency_leave_user_id'), table_name='emergency_leave')
+    op.drop_index(op.f('ix_emergency_leave_requests_request_id'), table_name='emergency_leave_requests')
+    op.drop_table('emergency_leave_requests')
     op.drop_index(op.f('ix_emergency_leave_emergency_id'), table_name='emergency_leave')
     op.drop_table('emergency_leave')
     op.drop_index(op.f('ix_conversations_user_id'), table_name='conversations')

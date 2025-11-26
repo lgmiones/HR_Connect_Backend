@@ -1,14 +1,3 @@
-# from pydantic_settings import BaseSettings
-
-# class Settings(BaseSettings):
-#     APP_NAME: str = "HR Connect Backend"
-#     SQLALCHEMY_DATABASE_URI: str  # ✅ directly loaded from .env
-
-#     class Config:
-#         env_file = ".env"
-
-# settings = Settings()
-
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -33,6 +22,8 @@ class Settings(BaseSettings):
 
     GROQ_API_KEY: str
 
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  
+    
     class Config:
         env_file = ".env"  # loads variables from your .env file
 
