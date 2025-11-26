@@ -26,7 +26,7 @@ IMPORTANT:
 - DO NOT ask follow-up questions
 - DO NOT suggest additional queries
 - End your response naturally after answering"""),
-    ("user", "Policy:\n{context}\n\nQ: {question}\nA:")
+    ("user", "Policy:\n{context}\n{question}")
 ])
 
 # Compound questions prompt
