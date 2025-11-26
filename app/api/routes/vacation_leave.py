@@ -18,20 +18,41 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/vacation-leave", tags=["Vacation Leave"])
 
 @router.post("", response_model=VacationLeaveResponse, status_code=201)
-async def create_vacation_leave(
+async def create_emergency_leave(
     request: UpdateLeaveRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new vacation leave request"""
-    leave = LeaveService.post_vacation_leave(
-        db=db,
-        user_id=current_user.user_id,
-        used_days=request.used_days,
-        reason=request.reason
-    )
-    return leave
-
+    """Create a new emergency leave request"""
+    
+    # Validate reason is provided
+    if not request.reason or not request.reason.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Reason is required for emergency leave request"
+        )
+    
+    # Validate used_days is positive
+    if request.used_days <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Number of days must be greater than zero"
+        )
+    
+    try:
+        leave = LeaveService.post_vacation_leave(
+            db=db,
+            user_id=current_user.user_id,
+            used_days=request.used_days,
+            reason=request.reason
+        )
+        return leave
+    except ValueError as e:
+        # Handle insufficient balance errors
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
 
 @router.get("/balance", response_model=VacationLeaveResponse)
 def get_vacation_balance(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
