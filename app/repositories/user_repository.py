@@ -20,6 +20,24 @@ class UserRepository(BaseRepository[User]):
         """Find user by email address"""
         return self.db.query(User).filter(User.email == email).first()
     
+    def get_by_id(self, user_id: int) -> Optional[User]:
+        """Get user by ID - ALWAYS fetch fresh from DB"""
+        
+        # ✅ CRITICAL: Expire all cached objects first
+        self.db.expire_all()
+        
+        # ✅ Query by primary key
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        
+        if user:
+            # ✅ Refresh from database to ensure fresh data
+            self.db.refresh(user)
+            
+            # ✅ Log to verify correct user
+            print(f"📧 get_by_id query result: user_id={user.user_id}, email={user.email}")
+        
+        return user
+    
     def email_exists(self, email: str) -> bool:
         """Check if email already exists in database"""
         return self.db.query(User).filter(User.email == email).first() is not None
