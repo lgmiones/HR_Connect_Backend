@@ -9,7 +9,7 @@ import logging
 import sys
 from app.services.retriever import prefetch_common_queries
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.middleware.no_cache import NoCacheMiddleware
  
  
 # ✅ Configure logging BEFORE anything else
@@ -31,7 +31,9 @@ app = FastAPI(
         "persistAuthorization": True
     }
 )
- 
+
+app.add_middleware(NoCacheMiddleware)
+
 origins = [
     "http://localhost:3000",  # your frontend
     "http://127.0.0.1:8000",  # optional
