@@ -71,11 +71,11 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 ┌────────────────────────────────────────────────────────┐
 │           LangGraph Agentic Orchestrator               │
 │                                                        │
-│  ┌──────────────┐      ┌───────────────┐               │
-│  │ Query        │  →   │ Router        │               │
-│  │ Decomposer   │      │ (Classifier)  │               │
-│  └──────────────┘      └───────┬───────┘               │
-│                                ↓                       │
+│  ┌────────────┐      ┌───────────┐     ┌────────────┐  |             
+│  │ Query      │  →   | Intent    |  →  │   Router   |  |              
+│  │ Decomposer │      | Classifier|     │(Classifier)|  |              
+│  └────────────┘      └───────────┘     └─────┬──────┘  |             
+│                                              ↓         │
 │         ┌──────────────────────|─────────────────┐     │
 │         ↓                      ↓                 ↓     │
 │  ┌────────────┐         ┌─────────────┐   ┌──────────┐ │
@@ -105,10 +105,11 @@ An AI-powered Human Resource Information System featuring an **Agentic RAG chatb
 ### Key Components
 
 1. **Query Decomposer** - Breaks compound questions into sub-queries
-2. **Router** - Classifies queries as policy/personal_data/general
-3. **Policy Handler** - Searches HR documents using RAG
-4. **Personal Data Handler** - Queries SQL database for user-specific data
-5. **General Handler** - Handles system information queries
+2. **Intent Classifier** - Understands the intent of the question
+3. **Router** - Classifies queries as policy/personal_data/general
+4. **Policy Handler** - Searches HR documents using RAG
+5. **Personal Data Handler** - Queries SQL database for user-specific data
+6. **General Handler** - Handles system information queries
 
 ---
 
@@ -230,20 +231,104 @@ python -m app.Chromadb.embed_documents
 
 The system uses the following tables:
 ```sql
+-- Conversation table
+CREATE TABLE conversations (
+    conversation_id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL,
+    title VARCHAR(255),
+    created_at DATETIMEOFFSET DEFAULT SYSDATETIMEOFFSET(),
+    updated_at DATETIMEOFFSET DEFAULT SYSDATETIMEOFFSET(),
+
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- Messages table
+CREATE TABLE messages (
+    message_id INT PRIMARY KEY IDENTITY(1,1),
+    conversation_id INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIMEOFFSET DEFAULT SYSDATETIMEOFFSET(),
+
+    FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id)
+);
+
+-- Emergency leave request table
+CREATE TABLE emergency_leave_requests (
+    request_id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL,
+    used_days INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT SYSDATETIME(),
+
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- Emergency leave table
+CREATE TABLE emergency_leave (
+    emergency_id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL UNIQUE,
+    total_days INT DEFAULT 12,
+    used_days INT DEFAULT 0,
+    last_updated DATE DEFAULT CAST(GETDATE() AS DATE),
+
+    CONSTRAINT uq_emergency_user_id UNIQUE (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- Sick leave request table
+CREATE TABLE sick_leave_requests (
+    request_id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL,
+    used_days INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT SYSDATETIME(),
+
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- Sick leave table
+CREATE TABLE sick_leave (
+    sick_id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL UNIQUE,
+    total_days INT DEFAULT 12,
+    used_days INT DEFAULT 0,
+    last_updated DATE DEFAULT CAST(GETDATE() AS DATE),
+
+    CONSTRAINT uq_emergency_user_id UNIQUE (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- Vacation leave request table
+CREATE TABLE vacation_leave_requests (
+    request_id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL,
+    used_days INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT SYSDATETIME(),
+
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- Vacation leave table
+CREATE TABLE vacation_leave (
+    sick_id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL UNIQUE,
+    total_days INT DEFAULT 12,
+    used_days INT DEFAULT 0,
+    last_updated DATE DEFAULT CAST(GETDATE() AS DATE),
+
+    CONSTRAINT uq_emergency_user_id UNIQUE (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
 -- Users table
 CREATE TABLE users (
     user_id INT PRIMARY KEY IDENTITY(1,1),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    hashed_password VARCHAR(255) NOT NULL,
-    created_at DATETIME DEFAULT GETDATE()
-);
-
--- Leave balance table
-CREATE TABLE leave_balance (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    user_id INT FOREIGN KEY REFERENCES users(user_id),
-    total_leaves INT NOT NULL,
-    used_leaves INT DEFAULT 0
+    email VARCHAR(100) UNIQUE,
+    hashed_password VARCHAR(255),
+    current_token_jti VARCHAR(255),
+    token_expires_at DATETIMEOFFSET,
+    created_at DATETIMEOFFSET DEFAULT SYSDATETIMEOFFSET()
 );
 ```
 
@@ -356,10 +441,25 @@ HR_Connect_Backend/
 ├── app/
 │   ├── Agent/                      # Agentic RAG system
 │   │   ├── handlers/
+│   │   |   ├── general/
+│   │   │   |   ├── llm_responder.py  
+│   │   |   ├── personal_data/
+│   │   │   |   ├── balance_service.py
+│   │   │   |   ├── history_service.py
+│   │   │   |   ├── intent_detector.py
+│   │   │   |   ├── response_formatter.py    
 │   │   │   ├── base_handler.py    # Handler interface
-│   │   │   ├── policy_handler.py  # Policy queries → Chroma
+│   │   │   ├── general_handler.py  # General system info
 │   │   │   ├── personal_data_handler.py  # Personal queries → SQL
-│   │   │   └── general_handler.py # General system info
+│   │   │   └── policy_handler.py # Policy queries → Chroma
+│   │   ├── orchestrator/
+│   │   │   ├── graph.py
+│   │   │   ├── nodes.py
+│   │   │   ├── result_combiner.py
+│   │   │   ├── routing.py 
+│   │   ├── query_decomposer/
+│   │   │   ├── decomposer.py
+│   │   │   ├── prompts.py
 │   │   ├── utils/
 │   │   │   └── llm_config.py      # LLM initialization
 │   │   ├── models.py               # Pydantic state models
