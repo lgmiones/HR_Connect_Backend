@@ -513,6 +513,7 @@ HR_Connect_Backend/
 ├── .env                           # Environment variables (create this)
 ├── .gitignore                     # Git ignore rules
 └── README.md                      # This file
+├── web.config
 ```
 
 ---
